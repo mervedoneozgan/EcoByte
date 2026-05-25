@@ -1,0 +1,37 @@
+/**
+ * EcoByte marka renkleri
+ * Primary Button → --color-primary
+ * Hover          → --color-hover
+ * Accent         → --color-accent
+ * Secondary      → --color-secondary
+ * Light Text     → --color-text-light
+ */
+
+:root {
+  --color-primary-blue: #67d2f5;
+  --color-cyan: #42b7d6;
+  --color-dark-cyan: #2e8fb0;
+  --color-light-green: #a5f279;
+  --color-dark-green: #6dcc5b;
+  --color-text-light: #bdf4ff;
+
+  /* UI kullanımı */
+  --color-primary: var(--color-primary-blue);
+  --color-hover: var(--color-cyan);
+  --color-accent: var(--color-light-green);
+  --color-secondary: var(--color-dark-green);
+  --color-text: var(--color-text-light);
+
+  --gradient-brand: linear-gradient(
+    135deg,
+    #67d2f5 0%,
+    #42b7d6 55%,
+    #a5f279 100%
+  );
+
+  /* Arka plan tonları */
+  --bg-base: #0a1620;
+  --bg-surface: #0f2430;
+  --bg-elevated: #143040;
+  --border-subtle: rgba(103, 210, 245, 0.2);
+}
