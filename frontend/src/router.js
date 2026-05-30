@@ -8,6 +8,7 @@ import { getRouteFromHash, navigateTo } from './utils/navigation.js';
 import { renderDashboardContent, mountDashboardCharts } from './pages/dashboard.js';
 import { renderConsultancyPage, initConsultancyPage } from './pages/consultancy.js';
 import { renderNotificationsPage, initNotificationsPage } from './pages/notifications.js';
+import { renderReportingPage, initReportingPage } from './pages/reporting.js';
 import { renderSettingsPage, initSettingsPage } from './pages/settings.js';
 import { renderPlaceholderPage } from './pages/placeholder.js';
 
@@ -40,6 +41,8 @@ async function loadPageData(routeId) {
         appState.useMock = false;
         return { type: 'settings', data };
       }
+      case 'reporting':
+        return { type: 'reporting' };
       default:
         return { type: 'placeholder', routeId };
     }
@@ -54,6 +57,8 @@ async function loadPageData(routeId) {
         return { type: 'notifications', data: MOCK_NOTIFICATIONS };
       case 'settings':
         return { type: 'settings', data: MOCK_SETTINGS };
+      case 'reporting':
+        return { type: 'reporting' };
       default:
         return { type: 'placeholder', routeId };
     }
@@ -70,6 +75,8 @@ function renderPageContent(routeId, pageResult) {
       return renderNotificationsPage(pageResult.data);
     case 'settings':
       return renderSettingsPage(pageResult.data);
+    case 'reporting':
+      return renderReportingPage();
     default: {
       const labels = {
         emission: 'Emisyon Ölçümü',
@@ -103,6 +110,7 @@ export async function renderRoute(routeId) {
   }
   if (pageResult.type === 'consultancy') initConsultancyPage();
   if (pageResult.type === 'notifications') initNotificationsPage();
+  if (pageResult.type === 'reporting') initReportingPage();
   if (pageResult.type === 'settings') initSettingsPage();
 
   window.ecobyteUseMock = appState.useMock;
