@@ -1,0 +1,65 @@
+-- 1. YAKIT TÜKETİMİ TABLOSU
+CREATE TABLE yakit_tuketimi (
+    kullanim_alani VARCHAR(255),
+    yakit_tipi VARCHAR(50),
+    yakit_tuketimi_l NUMERIC
+);
+
+-- 2. ELEKTRİK 2024 TABLOSU
+CREATE TABLE elektrik_2024 (
+    aylar VARCHAR(50),
+    tuketim_kwh NUMERIC,
+    elk_dagitim_kwh NUMERIC,
+    ges_cati_uretim_kwh NUMERIC,
+    birim_fiyat_tl NUMERIC,
+    odenecek_tutar_tl NUMERIC
+);
+
+-- 3. ELEKTRİK 2025 TABLOSU
+CREATE TABLE elektrik_2025 (
+    ay VARCHAR(50),
+    hku_tuketim_kwh NUMERIC,
+    hku_tuketim_tl NUMERIC,
+    konuk_evi_yurt_tuketim_kwh NUMERIC,
+    konuk_evi_yurt_tuketim_tl NUMERIC
+);
+
+-- 4. GES 2025 ÜRETİM TABLOSU
+CREATE TABLE ges_uretim_2025 (
+    ay VARCHAR(50),
+    arbim_ges NUMERIC,
+    ftr_ges NUMERIC,
+    hku_cati_ges NUMERIC,
+    kkm_cati_ges NUMERIC,
+    hkuges1 NUMERIC,
+    toplam NUMERIC
+);
+
+-- 5. DOĞALGAZ 2024 TABLOSU
+CREATE TABLE dogalgaz_2024 (
+    sozlesme_no VARCHAR(50),
+    blok VARCHAR(100),
+    no VARCHAR(50),
+    daire VARCHAR(50),
+    isyeri VARCHAR(50),
+    tuketim_2024_02_21 NUMERIC,
+    odenecek_tutar_2024_02_21 NUMERIC,
+    tuketim_2024_03_20 NUMERIC,
+    odenecek_tutar_2024_03_20 NUMERIC,
+    tuketim_2024_04_26 NUMERIC,
+    odenecek_tutar_2024_04_26 NUMERIC,
+    tuketim_2024_05_21 NUMERIC,
+    odenecek_tutar_2024_05_21 NUMERIC,
+    tuketim_2024_06_25 NUMERIC,
+    odenecek_tutar_2024_06_25 NUMERIC,
+    tuketim_2024_07_24 NUMERIC,
+    odenecek_tutar_2024_07_24 NUMERIC,
+    tuketim_2024_09_20 NUMERIC,
+    odenecek_tutar_2024_09_20 NUMERIC,
+    tuketim_2024_10_22 NUMERIC,
+    odenecek_tutar_2024_10_22 NUMERIC,
+    tuketim_2024_11_15 NUMERIC,
+    odenecek_tutar_2024_11_15 NUMERIC,
+    tuketim_2024_12_16 NUMERIC,
+    odenecek_tutar_2024_12_16 NUMERIC
+);
