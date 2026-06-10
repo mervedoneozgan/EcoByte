@@ -446,21 +446,29 @@ test('exposes the documented and exactly calculated 2026 emission quota', async 
   assert.equal(quota.summary.quotaLimit, Number((quota.summary.quotaBaselineEmission * 0.95).toFixed(3)));
   assert.equal(quota.summary.quotaReductionTarget, 108.018);
   assert.equal(quota.summary.quotaReductionPercent, 5);
-  assert.equal(quota.summary.quotaEmission, quota.summary.energyEmission);
+  assert.equal(quota.summary.quotaEmission, null);
+  assert.equal(quota.summary.quotaMeasurementAvailable, false);
+  assert.equal(quota.summary.quotaStatus, 'Yıllık ölçüm bekleniyor');
+  assert.equal(quota.summary.quotaExceeded, false);
   assert.equal(quota.summary.sellableSurplus, 0);
+  assert.deepEqual(quota.annualQuotas.map((item) => item.year), [2024, 2025, 2026]);
+  assert.equal(quota.annualQuotas.find((item) => item.year === 2026).hasActual, false);
   assert.match(quota.methodology.title, /kurumsal emisyon kotası/i);
   assert.ok(quota.methodology.sources.length >= 3);
 });
 
-test('separates emission distribution from solar production', async () => {
+test('serves year-specific emission distributions and separates unassigned fuel', async () => {
   const distribution = await request('/dashboard/distribution');
   const solar = await request('/dashboard/solar');
-  const fuel = distribution.items.find((item) => item.name === 'Yakıt tüketimi');
 
-  assert.equal(distribution.total, 2862.575);
-  assert.equal(fuel.value, 702.224);
-  assert.equal(fuel.impactType, 'emission');
-  assert.equal(distribution.items.length, 3);
+  assert.equal(distribution.selectedYear, 2025);
+  assert.equal(distribution.total, 2160.351);
+  assert.equal(distribution.unassignedFuelEmission, 702.224);
+  assert.equal(distribution.items.length, 2);
+  assert.deepEqual(distribution.years.map((item) => item.year), [2024, 2025]);
+  assert.equal(distribution.years.find((item) => item.year === 2024).total, 1397.003);
+  assert.equal(distribution.years.find((item) => item.year === 2025).total, 2160.351);
+  assert.equal(distribution.items.some((item) => /yakıt/i.test(item.name)), false);
   assert.equal(
     distribution.items.reduce((sum, item) => sum + item.percent, 0),
     100

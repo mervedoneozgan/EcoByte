@@ -3,6 +3,7 @@ import { renderKPICards } from '../render/kpis.js';
 import {
   renderTrendChart,
   renderDistributionChart,
+  renderDistributionLegend,
   renderSolarProductionChart,
   renderQuotaGauge,
 } from '../render/charts.js';
@@ -125,7 +126,30 @@ export function mountDashboardCharts(data) {
       });
     });
   }
-  if (distributionCanvas) createDistributionChart(distributionCanvas, data.distribution);
+  if (distributionCanvas) {
+    const annualDistributions = data.distribution.years ?? [data.distribution];
+    let distributionChart;
+    const renderDistributionYear = (year) => {
+      const selected = annualDistributions.find((item) => item.year === year) ?? annualDistributions.at(-1);
+      distributionChart?.destroy();
+      distributionChart = createDistributionChart(distributionCanvas, selected);
+      document.getElementById('distribution-chart-meta').textContent =
+        `${selected.year} yıllık brüt emisyon · ${selected.scope}`;
+      document.getElementById('distribution-total-label').textContent = `${selected.year} toplam`;
+      document.getElementById('distribution-total').textContent = formatNumber(selected.total);
+      document.getElementById('distribution-legend').innerHTML = renderDistributionLegend(selected);
+      document.getElementById('distribution-chart-note').textContent = selected.note;
+      document.querySelectorAll('[data-distribution-year]').forEach((button) => {
+        const active = Number(button.dataset.distributionYear) === selected.year;
+        button.classList.toggle('segmented__item--active', active);
+        button.setAttribute('aria-pressed', String(active));
+      });
+    };
+    renderDistributionYear(data.distribution.selectedYear ?? annualDistributions.at(-1).year);
+    document.querySelectorAll('[data-distribution-year]').forEach((button) => {
+      button.addEventListener('click', () => renderDistributionYear(Number(button.dataset.distributionYear)));
+    });
+  }
   if (solarCanvas) {
     const facilities = data.solar.facilities ?? [];
     const initialFacility = facilities[0];
@@ -157,10 +181,41 @@ export function mountDashboardCharts(data) {
     });
   }
   if (quotaCanvas) {
-    const used = data.summary.quotaExceeded
-      ? data.summary.quotaLimit
-      : data.summary.quotaEmission ?? data.summary.quotaLimit - data.summary.remaining;
-    createQuotaGauge(quotaCanvas, used, data.summary.remaining, data.summary.overage || 0);
+    const annualQuotas = data.summary.annualQuotas ?? [];
+    let quotaChart;
+    const renderQuotaYear = (year) => {
+      const selected = annualQuotas.find((item) => item.year === year) ?? annualQuotas.at(-1);
+      const actual = selected.hasActual ? selected.actualEmission : 0;
+      const remaining = selected.hasQuota && !selected.hasActual
+        ? selected.quotaLimit
+        : selected.remaining ?? 0;
+      const mode = selected.hasQuota
+        ? selected.hasActual ? 'comparison' : 'quota-only'
+        : 'actual-only';
+      quotaChart?.destroy();
+      quotaChart = createQuotaGauge(quotaCanvas, actual, remaining, selected.overage || 0, mode);
+      document.getElementById('quota-chart-meta').textContent = `${selected.year} · ${selected.status}`;
+      document.getElementById('quota-gauge-percent').textContent =
+        selected.usedPercent === null ? '-' : `${selected.usedPercent}%`;
+      document.getElementById('quota-gauge-actual').textContent =
+        selected.hasActual ? `${formatNumber(selected.actualEmission)} t` : 'Ölçüm bekleniyor';
+      document.getElementById('quota-gauge-limit').textContent =
+        selected.hasQuota ? `${formatNumber(selected.quotaLimit)} t` : 'Tanımlı değil';
+      document.getElementById('quota-chart-note').textContent = selected.hasQuota
+        ? selected.hasActual
+          ? 'Kota ve gerçekleşen emisyon aynı yıl içinde karşılaştırılıyor.'
+          : 'Yıllık kota tanımlı; gerçekleşen tam yıl emisyonu henüz bulunmuyor.'
+        : 'Bu yıl için kayıtlı kurumsal kota bulunmuyor; yalnızca gerçekleşen emisyon gösteriliyor.';
+      document.querySelectorAll('[data-quota-year]').forEach((button) => {
+        const active = Number(button.dataset.quotaYear) === selected.year;
+        button.classList.toggle('segmented__item--active', active);
+        button.setAttribute('aria-pressed', String(active));
+      });
+    };
+    renderQuotaYear(data.summary.quotaYear);
+    document.querySelectorAll('[data-quota-year]').forEach((button) => {
+      button.addEventListener('click', () => renderQuotaYear(Number(button.dataset.quotaYear)));
+    });
   }
   if (sparkEmission) createSparkline(sparkEmission, data.trend.map((row) => row.actual));
 

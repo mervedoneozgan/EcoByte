@@ -215,20 +215,24 @@ export function calculateDashboardFromEnergy(records, config = {}) {
     trend.reduce((sum, record) => sum + (record.solarProductionKwh ?? 0), 0),
     3
   );
-  const totalEmission = round(energyEmission + fuelEmission, 3);
+  const totalEmission = energyEmission;
+  const comprehensiveGrossEmission = round(energyEmission + fuelEmission, 3);
   const trendPercent = previous.actual
     ? round(((current.actual - previous.actual) / previous.actual) * 100, 1)
     : 0;
-  const quotaEmission = energyEmission;
-  const remaining = round(quotaLimit - quotaEmission, 2);
-  const usedPercent = quotaLimit
+  const quotaEmission = Number.isFinite(config.quotaActualEmission)
+    ? round(config.quotaActualEmission, 3)
+    : null;
+  const hasQuotaMeasurement = quotaEmission !== null;
+  const remaining = hasQuotaMeasurement ? round(quotaLimit - quotaEmission, 2) : null;
+  const usedPercent = hasQuotaMeasurement && quotaLimit
     ? round((quotaEmission / quotaLimit) * 100, 1)
-    : 0;
-  const quotaExceeded = remaining < 0;
+    : null;
+  const quotaExceeded = hasQuotaMeasurement && remaining < 0;
   const etsEligible = config.etsEligible ?? false;
-  const sellableSurplus = etsEligible ? Math.max(0, remaining) : 0;
+  const sellableSurplus = etsEligible && hasQuotaMeasurement ? Math.max(0, remaining) : 0;
   const estimatedTradingProfit = round(sellableSurplus * marketPrice, 2);
-  const baselineEmission = round(config.quotaBaselineEmission ?? quotaEmission, 3);
+  const baselineEmission = round(config.quotaBaselineEmission ?? energyEmission, 3);
   const reductionTarget = round(baselineEmission - quotaLimit, 3);
   const reductionPercent = baselineEmission
     ? round((reductionTarget / baselineEmission) * 100, 1)
@@ -245,14 +249,6 @@ export function calculateDashboardFromEnergy(records, config = {}) {
       value: naturalGasEmission,
       color: '#42B7D6',
     },
-    {
-      name: 'Yakıt tüketimi',
-      value: fuelEmission,
-      color: '#F5C76B',
-      impactType: 'emission',
-      unit: 'tCO2e',
-      note: 'Kaynak dosyada dönem belirtilmemiştir.',
-    },
   ];
   const distributionItems = distributionItemsRaw.map((item) => ({
     ...item,
@@ -264,6 +260,8 @@ export function calculateDashboardFromEnergy(records, config = {}) {
   return {
     summary: {
       totalEmission,
+      comprehensiveGrossEmission,
+      reportingYear: config.reportingYear ?? current?.year ?? null,
       energyEmission,
       electricityEmission,
       naturalGasEmission,
@@ -280,10 +278,13 @@ export function calculateDashboardFromEnergy(records, config = {}) {
       quotaReductionTarget: reductionTarget,
       quotaReductionPercent: reductionPercent,
       quotaNote: config.quotaNote ?? '2025 baz yılına göre belirlenen kurumsal emisyon kotasıdır.',
+      quotaMeasurementAvailable: hasQuotaMeasurement,
       usedPercent,
-      remaining: Math.max(0, remaining),
+      remaining: hasQuotaMeasurement ? Math.max(0, remaining) : null,
       overage: quotaExceeded ? Math.abs(remaining) : 0,
-      quotaStatus: quotaExceeded ? 'Kota aşıldı' : 'Kota aşılmadı',
+      quotaStatus: hasQuotaMeasurement
+        ? quotaExceeded ? 'Kota aşıldı' : 'Kota aşılmadı'
+        : 'Yıllık ölçüm bekleniyor',
       quotaExceeded,
       etsEligible,
       etsStatus: config.etsStatus ?? 'Resmî ETS tahsisi bulunmuyor; kapsam doğrulaması gerekli.',

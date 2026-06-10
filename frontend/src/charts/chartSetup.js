@@ -238,18 +238,35 @@ export function createDistributionChart(canvas, distribution) {
   });
 }
 
-export function createQuotaGauge(canvas, used, remaining, overage = 0) {
+export function createQuotaGauge(canvas, used, remaining, overage = 0, mode = 'comparison') {
   const exceeded = overage > 0;
+  const actualOnly = mode === 'actual-only';
+  const quotaOnly = mode === 'quota-only';
+  const labels = actualOnly
+    ? ['Yıllık emisyon']
+    : quotaOnly
+      ? ['Yıllık kota limiti']
+      : exceeded ? ['Kota limiti', 'Aşım'] : ['Kullanılan', 'Kalan'];
+  const values = actualOnly
+    ? [used]
+    : quotaOnly
+      ? [remaining]
+      : exceeded ? [used, overage] : [used, remaining];
+  const colors = actualOnly
+    ? [BRAND.primaryBlue]
+    : quotaOnly
+      ? [BRAND.darkGreen]
+      : exceeded
+        ? ['#F5C76B', '#F87171']
+        : [BRAND.darkGreen, 'rgba(46, 143, 176, 0.35)'];
   return new Chart(canvas, {
     type: 'doughnut',
     data: {
-      labels: exceeded ? ['Kota limiti', 'Aşım'] : ['Kullanılan', 'Kalan'],
+      labels,
       datasets: [
         {
-          data: exceeded ? [used, overage] : [used, remaining],
-          backgroundColor: exceeded
-            ? ['#F5C76B', '#F87171']
-            : [BRAND.darkGreen, 'rgba(46, 143, 176, 0.35)'],
+          data: values,
+          backgroundColor: colors,
           borderWidth: 0,
           hoverOffset: 10,
         },

@@ -2,7 +2,12 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { escapeHtml, normalizeDisplayText } from '../src/utils/text.js';
 import { renderHeader } from '../src/render/header.js';
-import { renderSolarProductionChart, renderTrendChart } from '../src/render/charts.js';
+import {
+  renderDistributionChart,
+  renderQuotaGauge,
+  renderSolarProductionChart,
+  renderTrendChart,
+} from '../src/render/charts.js';
 import { renderTradingCard } from '../src/render/trading.js';
 import { renderLoginPage } from '../src/pages/login.js';
 import { renderSettingsPage } from '../src/pages/settings.js';
@@ -60,6 +65,40 @@ test('renders all solar facility selectors', () => {
   assert.match(html, /Kaçınılan karbon emisyonu/);
 });
 
+test('renders 2024 and 2025 controls for annual emission distribution', () => {
+  const years = [
+    { year: 2024, total: 1397.003, scope: 'Kapsam 1 + Kapsam 2', note: 'Yıllık', items: [] },
+    { year: 2025, total: 2160.351, scope: 'Kapsam 1 + Kapsam 2', note: 'Yıllık', items: [] },
+  ];
+  const html = renderDistributionChart({ ...years[1], selectedYear: 2025, years });
+
+  assert.match(html, /data-distribution-year="2024"/);
+  assert.match(html, /data-distribution-year="2025"/);
+  assert.match(html, /2025 yıllık brüt emisyon/);
+});
+
+test('renders yearly quota controls without showing a false overage', () => {
+  const html = renderQuotaGauge({
+    quotaYear: 2026,
+    quotaStatus: 'Yıllık ölçüm bekleniyor',
+    quotaLimit: 2052.333,
+    quotaEmission: null,
+    quotaMeasurementAvailable: false,
+    usedPercent: null,
+    annualQuotas: [
+      { year: 2024, actualEmission: 1397.003, hasActual: true, hasQuota: false, usedPercent: null, status: 'Kota tanımlı değil' },
+      { year: 2025, actualEmission: 2160.351, hasActual: true, hasQuota: false, usedPercent: null, status: 'Kota tanımlı değil' },
+      { year: 2026, actualEmission: null, quotaLimit: 2052.333, hasActual: false, hasQuota: true, usedPercent: null, status: 'Yıllık ölçüm bekleniyor' },
+    ],
+  });
+
+  assert.match(html, /data-quota-year="2024"/);
+  assert.match(html, /data-quota-year="2025"/);
+  assert.match(html, /data-quota-year="2026"/);
+  assert.match(html, /Yıllık ölçüm bekleniyor/);
+  assert.doesNotMatch(html, /Kota aşıldı/);
+});
+
 test('renders a dashboard action that opens emission trading', () => {
   const html = renderTradingCard({
     sellableSurplus: 100,
@@ -70,29 +109,46 @@ test('renders a dashboard action that opens emission trading', () => {
   assert.match(html, /Satılabilir kota yalnızca belgelenmiş resmî ETS tahsisinden hesaplanır/);
 });
 
-test('renders the old quota management view with the exact 2026 quota calculation', () => {
+test('renders yearly quota management without a false 2026 overage', () => {
+  const annualQuotas = [
+    {
+      year: 2024, actualEmission: 1397.003, quotaLimit: null, baselineYear: null,
+      hasQuota: false, hasActual: true, usedPercent: null, remaining: null, overage: 0,
+      quotaExceeded: false, status: 'Kota tanımlı değil',
+    },
+    {
+      year: 2025, actualEmission: 2160.351, quotaLimit: null, baselineYear: null,
+      hasQuota: false, hasActual: true, usedPercent: null, remaining: null, overage: 0,
+      quotaExceeded: false, status: 'Kota tanımlı değil',
+    },
+    {
+      year: 2026, actualEmission: null, quotaLimit: 2052.333, baselineYear: 2025,
+      hasQuota: true, hasActual: false, usedPercent: null, remaining: null, overage: 0,
+      quotaExceeded: false, status: 'Yıllık ölçüm bekleniyor',
+    },
+  ];
   const html = renderQuotaPage({
     summary: {
       quotaLimit: 2052.333,
-      quotaEmission: 2160.351,
+      quotaEmission: null,
       quotaYear: 2026,
       quotaBaselineYear: 2025,
       quotaBaselineEmission: 2160.351,
       quotaReductionTarget: 108.018,
       quotaReductionPercent: 5,
       quotaScope: 'Kapsam 1 + Kapsam 2',
-      quotaStatus: 'Kota aşıldı',
+      quotaStatus: 'Yıllık ölçüm bekleniyor',
       etsStatus: 'Resmî ETS tahsisi bulunmuyor.',
       etsScreeningThresholdTco2e: 50000,
-      usedPercent: 105.3,
-      quotaExceeded: true,
-      overage: 108.02,
-      remaining: 0,
+      usedPercent: null,
+      quotaExceeded: false,
+      overage: 0,
+      remaining: null,
       sellableSurplus: 0,
       marketPrice: 25.4,
       estimatedTradingProfit: 0,
     },
-    trend: [{ month: 'Ocak', monthName: 'Ocak', actual: 180 }],
+    annualQuotas,
     plans: [],
     methodology: {
       title: '2026 Kurumsal Emisyon Kotası',
@@ -107,8 +163,14 @@ test('renders the old quota management view with the exact 2026 quota calculatio
   assert.match(html, /Kota Yönetimi/);
   assert.match(html, /2026 kota limiti/);
   assert.match(html, /2\.052,333/);
+  assert.match(html, /Yıllık ölçüm bekleniyor/);
+  assert.match(html, /Yıllık kota karşılaştırması/);
+  assert.match(html, /data-quota-page-year="2024"/);
+  assert.match(html, /data-quota-page-year="2025"/);
+  assert.match(html, /data-quota-page-year="2026"/);
   assert.match(html, /Satılabilir kota/);
   assert.match(html, /50\.000/);
+  assert.doesNotMatch(html, /Kota aşıldı/);
 });
 
 test('renders persisted settings preferences as editable controls', () => {

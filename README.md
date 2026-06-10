@@ -52,6 +52,8 @@ Platformdaki `2.052,333 tCO2e` kota limiti, 2025 yılında ölçülen elektrik v
 
 Dönemi doğrulanmamış yakıt emisyonları kota kullanımına dahil edilmez. GES kaynaklı kaçınılan emisyon pozitif etki olarak ayrı izlenir ve brüt emisyonlardan düşülmez. Resmî ETS tahsisi belgelenene kadar satılabilir kota ve tahmini ticaret geliri `0` olarak hesaplanır.
 
+Dashboard dağılımı yıllık çalışır: 2024 ve 2025 butonları yalnızca ilgili yılın elektrik ve doğalgaz emisyonlarını gösterir. Dönemi bilinmeyen yakıt herhangi bir yıla atanmaz. Kota karşılaştırması da yalnızca aynı yıl için hem kota hem gerçekleşen emisyon bulunduğunda aşım veya kalan üretir; 2026 tam yıl ölçümü tamamlanana kadar durum `Yıllık ölçüm bekleniyor` olarak gösterilir.
+
 Kota planları, satış emirleri, danışmanlık talepleri, bildirim durumları, ayarlar ve rapor arşivi backend yeniden başlatıldığında kaybolmaz. Rapor metrikleri her açılışta güncel gerçek envanterden yeniden hesaplanır. Farklı bir çalışma verisi konumu için `OPERATIONAL_STORE_PATH` tanımlanabilir.
 
 Danışmanlık ekranında talep mesajları, randevu yeniden planlama/katılım kayıtları ve belge özetleri API

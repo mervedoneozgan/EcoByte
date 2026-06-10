@@ -32,8 +32,8 @@ export function renderTrendChart(years = [2024, 2025]) {
     </article>`;
 }
 
-export function renderDistributionChart(distribution) {
-  const legend = distribution.items
+export function renderDistributionLegend(distribution) {
+  return distribution.items
     .map(
       (item) => `
       <div class="legend-item">
@@ -43,20 +43,37 @@ export function renderDistributionChart(distribution) {
       </div>`
     )
     .join('');
+}
+
+export function renderDistributionChart(distribution) {
+  const selectedYear = distribution.selectedYear ?? distribution.year;
+  const yearButtons = (distribution.years ?? [distribution])
+    .map((item) => `
+      <button type="button"
+        class="segmented__item ${item.year === selectedYear ? 'segmented__item--active' : ''}"
+        data-distribution-year="${item.year}"
+        aria-pressed="${item.year === selectedYear ? 'true' : 'false'}">${item.year}</button>`)
+    .join('');
 
   return `
     <article class="card card--chart">
-      <h3 class="card__heading">Toplam Emisyon Dağılımı</h3>
+      <div class="card__heading-row">
+        <div>
+          <h3 class="card__heading">Toplam Emisyon Dağılımı</h3>
+          <p class="card__meta" id="distribution-chart-meta">${selectedYear} yıllık brüt emisyon · Kapsam 1 + 2</p>
+        </div>
+        <div class="segmented chart-filters" aria-label="Dağılım yılı seçimi">${yearButtons}</div>
+      </div>
       <div class="chart-box chart-box--donut">
         <canvas id="chart-distribution"></canvas>
         <div class="donut-center">
-          <span class="donut-center__label">Brüt toplam</span>
-          <span class="donut-center__value">${formatNumber(distribution.total)}</span>
+          <span class="donut-center__label" id="distribution-total-label">${selectedYear} toplam</span>
+          <span class="donut-center__value" id="distribution-total">${formatNumber(distribution.total)}</span>
           <span class="donut-center__unit">tCO2e</span>
         </div>
       </div>
-      <div class="legend-grid">${legend}</div>
-      <p class="trade-card-note">Tek halka yalnızca elektrik, doğalgaz ve yakıtın brüt emisyon paylarını gösterir.</p>
+      <div class="legend-grid" id="distribution-legend">${renderDistributionLegend(distribution)}</div>
+      <p class="trade-card-note" id="distribution-chart-note">${distribution.note ?? 'Yıllık dağılım elektrik ve doğalgaz emisyonlarını gösterir.'}</p>
     </article>`;
 }
 
@@ -101,29 +118,47 @@ export function renderSolarProductionChart(solar) {
 }
 
 export function renderQuotaGauge(summary) {
-  const used = summary.quotaEmission ?? (
-    summary.quotaExceeded ? summary.quotaLimit : summary.quotaLimit - summary.remaining
-  );
+  const annualQuotas = summary.annualQuotas ?? [];
+  const selectedQuota = annualQuotas.find((item) => item.year === summary.quotaYear) ?? {
+    year: summary.quotaYear,
+    actualEmission: summary.quotaEmission,
+    quotaLimit: summary.quotaLimit,
+    usedPercent: summary.usedPercent,
+    status: summary.quotaStatus,
+    hasActual: summary.quotaMeasurementAvailable,
+    hasQuota: true,
+  };
+  const yearButtons = annualQuotas
+    .map((item) => `
+      <button type="button"
+        class="segmented__item ${item.year === selectedQuota.year ? 'segmented__item--active' : ''}"
+        data-quota-year="${item.year}"
+        aria-pressed="${item.year === selectedQuota.year ? 'true' : 'false'}">${item.year}</button>`)
+    .join('');
 
   return `
     <article class="card card--chart">
-      <h3 class="card__heading">Emisyon Kotası</h3>
-      <p class="card__meta">${summary.quotaYear} kurumsal kota limiti · ${summary.quotaBaselineYear} Scope 1+2 baz yılı</p>
+      <div class="card__heading-row">
+        <div>
+          <h3 class="card__heading">Emisyon Kotası</h3>
+          <p class="card__meta" id="quota-chart-meta">${selectedQuota.year} · ${selectedQuota.status}</p>
+        </div>
+        <div class="segmented chart-filters" aria-label="Kota yılı seçimi">${yearButtons}</div>
+      </div>
       <div class="chart-box chart-box--gauge"><canvas id="chart-quota"></canvas></div>
       <div class="gauge-footer">
-        <p class="gauge-footer__percent">${summary.usedPercent}%</p>
+        <p class="gauge-footer__percent" id="quota-gauge-percent">${selectedQuota.usedPercent === null ? '-' : `${selectedQuota.usedPercent}%`}</p>
         <div class="gauge-footer__stats">
           <div>
-            <p class="gauge-footer__label">Kullanılan</p>
-            <p class="gauge-footer__value">${formatNumber(used)} t</p>
+            <p class="gauge-footer__label">Yıllık emisyon</p>
+            <p class="gauge-footer__value" id="quota-gauge-actual">${selectedQuota.hasActual ? `${formatNumber(selectedQuota.actualEmission)} t` : 'Ölçüm bekleniyor'}</p>
           </div>
           <div>
-            <p class="gauge-footer__label">${summary.quotaExceeded ? 'Aşım' : 'Kalan'}</p>
-            <p class="gauge-footer__value ${summary.quotaExceeded ? 'text-danger' : 'gauge-footer__value--accent'}">
-              ${formatNumber(summary.quotaExceeded ? summary.overage : summary.remaining)} t
-            </p>
+            <p class="gauge-footer__label">Kota limiti</p>
+            <p class="gauge-footer__value gauge-footer__value--accent" id="quota-gauge-limit">${selectedQuota.hasQuota ? `${formatNumber(selectedQuota.quotaLimit)} t` : 'Tanımlı değil'}</p>
           </div>
         </div>
       </div>
+      <p class="trade-card-note" id="quota-chart-note">Kota ve gerçekleşen emisyon yalnızca aynı yıl içinde karşılaştırılır.</p>
     </article>`;
 }

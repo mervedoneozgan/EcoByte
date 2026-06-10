@@ -20,11 +20,26 @@ function renderPlanRows(plans) {
     .join('');
 }
 
+function renderAnnualQuotaRows(annualQuotas) {
+  return annualQuotas
+    .map((item) => {
+      const statusClass = item.quotaExceeded ? 'pill--yellow' : item.hasQuota ? 'pill--green' : 'pill--blue';
+      return `
+        <tr>
+          <td>${item.year}</td>
+          <td>${item.hasActual ? `${formatNumber(item.actualEmission)} tCO2e` : 'Ölçüm bekleniyor'}</td>
+          <td>${item.hasQuota ? `${formatNumber(item.quotaLimit)} tCO2e` : 'Tanımlı değil'}</td>
+          <td>${item.usedPercent === null ? '-' : `%${item.usedPercent}`}</td>
+          <td><span class="pill ${statusClass}">${escapeHtml(item.status)}</span></td>
+        </tr>`;
+    })
+    .join('');
+}
+
 export function renderQuotaPage(data) {
   pageData = JSON.parse(JSON.stringify(data));
-  const { summary, trend, plans = [], methodology = {} } = pageData;
-  const used = summary.quotaEmission ?? summary.quotaLimit - summary.remaining;
-  const monthlyAllowance = summary.quotaLimit / 12;
+  const { summary, annualQuotas = [], plans = [], methodology = {} } = pageData;
+  const selectedQuota = annualQuotas.find((item) => item.year === summary.quotaYear) ?? annualQuotas.at(-1);
   const sourceLinks = (methodology.sources ?? [])
     .map((source) => `<a class="source-link" href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(source.label)}</a>`)
     .join(' · ');
@@ -36,14 +51,23 @@ export function renderQuotaPage(data) {
           <h2 class="page-title page-title--left">Kota Yönetimi</h2>
           <p class="page-header__subtitle">Kota limiti, kullanım, aşım ve azaltım planlarının yönetimi</p>
         </div>
-        <button type="button" class="btn btn--primary" id="btn-quota-plan">Azaltım Planı</button>
+        <div class="page-header__actions">
+          <div class="segmented" aria-label="Kota yılı seçimi">
+            ${annualQuotas.map((item) => `
+              <button type="button"
+                class="segmented__item ${item.year === selectedQuota.year ? 'segmented__item--active' : ''}"
+                data-quota-page-year="${item.year}"
+                aria-pressed="${item.year === selectedQuota.year ? 'true' : 'false'}">${item.year}</button>`).join('')}
+          </div>
+          <button type="button" class="btn btn--primary" id="btn-quota-plan">Azaltım Planı</button>
+        </div>
       </div>
 
       <div class="summary-grid summary-grid--4">
-        <div class="summary-card summary-card--accent"><p class="summary-card__label">${summary.quotaYear} kota limiti</p><p class="summary-card__value">${formatNumber(summary.quotaLimit)} <span class="summary-card__unit">tCO2e</span></p></div>
-        <div class="summary-card"><p class="summary-card__label">Kullanılan (baz yıl)</p><p class="summary-card__value">${formatNumber(used)} <span class="summary-card__unit">tCO2e</span></p></div>
-        <div class="summary-card"><p class="summary-card__label">${summary.quotaExceeded ? 'Aşım' : 'Kalan'}</p><p class="summary-card__value">${formatNumber(summary.quotaExceeded ? summary.overage : summary.remaining)} <span class="summary-card__unit">tCO2e</span></p></div>
-        <div class="summary-card"><p class="summary-card__label">Kota kullanımı</p><p class="summary-card__value">%${summary.usedPercent}</p></div>
+        <div class="summary-card summary-card--accent"><p class="summary-card__label" id="quota-page-limit-label">${selectedQuota.year} kota limiti</p><p class="summary-card__value" id="quota-page-limit">${selectedQuota.hasQuota ? `${formatNumber(selectedQuota.quotaLimit)} tCO2e` : 'Tanımlı değil'}</p></div>
+        <div class="summary-card"><p class="summary-card__label">Gerçekleşen yıllık emisyon</p><p class="summary-card__value" id="quota-page-actual">${selectedQuota.hasActual ? `${formatNumber(selectedQuota.actualEmission)} tCO2e` : 'Ölçüm bekleniyor'}</p></div>
+        <div class="summary-card"><p class="summary-card__label">Yıllık durum</p><p class="summary-card__value" id="quota-page-status">${escapeHtml(selectedQuota.status)}</p></div>
+        <div class="summary-card"><p class="summary-card__label">Kota kullanımı</p><p class="summary-card__value" id="quota-page-usage">${selectedQuota.usedPercent === null ? '-' : `%${selectedQuota.usedPercent}`}</p></div>
       </div>
 
       <section class="card trading-guide">
@@ -60,12 +84,13 @@ export function renderQuotaPage(data) {
       <div class="grid grid--2">
         <section class="card">
           <h3 class="card__heading">Kota durumu</h3>
-          <div class="quota-meter"><div class="quota-meter__bar ${summary.quotaExceeded ? 'quota-meter__bar--danger' : ''}" style="width:${summary.usedPercent}%"></div></div>
+          <div class="quota-meter"><div class="quota-meter__bar ${selectedQuota.quotaExceeded ? 'quota-meter__bar--danger' : ''}" id="quota-page-meter" style="width:${selectedQuota.usedPercent ?? 0}%"></div></div>
           <dl class="data-list">
-            <div class="data-list__row"><dt>Durum</dt><dd class="${summary.quotaExceeded ? 'text-danger' : 'text-accent'}">${escapeHtml(summary.quotaStatus)}</dd></div>
+            <div class="data-list__row"><dt>Seçilen yıl</dt><dd id="quota-page-year">${selectedQuota.year}</dd></div>
+            <div class="data-list__row"><dt>Durum</dt><dd id="quota-page-detail-status" class="${selectedQuota.quotaExceeded ? 'text-danger' : 'text-accent'}">${escapeHtml(selectedQuota.status)}</dd></div>
             <div class="data-list__row"><dt>Kapsam</dt><dd>${escapeHtml(summary.quotaScope)}</dd></div>
-            <div class="data-list__row"><dt>Aylık ortalama kota</dt><dd>${formatNumber(monthlyAllowance)} tCO2e</dd></div>
-            <div class="data-list__row"><dt>Azaltım hedefi</dt><dd>${formatNumber(summary.quotaReductionTarget)} tCO2e · %${summary.quotaReductionPercent}</dd></div>
+            <div class="data-list__row"><dt>Baz yıl</dt><dd id="quota-page-baseline">${selectedQuota.baselineYear ?? 'Tanımlı değil'}</dd></div>
+            <div class="data-list__row"><dt>Yıllık bakiye</dt><dd id="quota-page-balance">${selectedQuota.hasQuota && selectedQuota.hasActual ? `${formatNumber(selectedQuota.quotaExceeded ? selectedQuota.overage : selectedQuota.remaining)} tCO2e ${selectedQuota.quotaExceeded ? 'aşım' : 'kalan'}` : 'Yıllık karşılaştırma henüz yapılamaz'}</dd></div>
           </dl>
         </section>
 
@@ -81,18 +106,12 @@ export function renderQuotaPage(data) {
       </div>
 
       <section class="card card--table">
-        <h3 class="card__heading">Aylık kota karşılaştırması</h3>
-        <p class="card__description">${summary.quotaBaselineYear} ölçümleri, ${summary.quotaYear} kurumsal kotasının aylık ortalamasıyla karşılaştırılır.</p>
+        <h3 class="card__heading">Yıllık kota karşılaştırması</h3>
+        <p class="card__description">Kota ve gerçekleşen emisyon yalnızca aynı yıl için birlikte mevcutsa aşım veya kalan hesaplanır.</p>
         <div class="table-wrap">
           <table class="data-table">
-            <thead><tr><th>Ay</th><th>Emisyon</th><th>Aylık kota</th><th>Kullanım</th><th>Durum</th></tr></thead>
-            <tbody>
-              ${trend.map((row) => {
-                const rate = ((row.actual / monthlyAllowance) * 100).toFixed(1);
-                const exceeded = row.actual > monthlyAllowance;
-                return `<tr><td>${row.monthName ?? row.month}</td><td>${formatNumber(row.actual)} tCO2e</td><td>${formatNumber(monthlyAllowance)} tCO2e</td><td>${rate}%</td><td><span class="pill ${exceeded ? 'pill--yellow' : 'pill--green'}">${exceeded ? 'Aşım' : 'Uygun'}</span></td></tr>`;
-              }).join('')}
-            </tbody>
+            <thead><tr><th>Yıl</th><th>Gerçekleşen emisyon</th><th>Kota limiti</th><th>Kullanım</th><th>Durum</th></tr></thead>
+            <tbody>${renderAnnualQuotaRows(annualQuotas)}</tbody>
           </table>
         </div>
       </section>
@@ -119,6 +138,38 @@ export function renderQuotaPage(data) {
 }
 
 export function initQuotaPage() {
+  document.querySelectorAll('[data-quota-page-year]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const selected = pageData.annualQuotas.find((item) => item.year === Number(button.dataset.quotaPageYear));
+      if (!selected) return;
+      document.querySelectorAll('[data-quota-page-year]').forEach((item) => {
+        const active = item === button;
+        item.classList.toggle('segmented__item--active', active);
+        item.setAttribute('aria-pressed', String(active));
+      });
+      document.getElementById('quota-page-limit-label').textContent = `${selected.year} kota limiti`;
+      document.getElementById('quota-page-limit').textContent =
+        selected.hasQuota ? `${formatNumber(selected.quotaLimit)} tCO2e` : 'Tanımlı değil';
+      document.getElementById('quota-page-actual').textContent =
+        selected.hasActual ? `${formatNumber(selected.actualEmission)} tCO2e` : 'Ölçüm bekleniyor';
+      document.getElementById('quota-page-status').textContent = selected.status;
+      document.getElementById('quota-page-usage').textContent =
+        selected.usedPercent === null ? '-' : `%${selected.usedPercent}`;
+      const meter = document.getElementById('quota-page-meter');
+      meter.style.width = `${Math.min(100, selected.usedPercent ?? 0)}%`;
+      meter.classList.toggle('quota-meter__bar--danger', selected.quotaExceeded);
+      document.getElementById('quota-page-year').textContent = selected.year;
+      const detailStatus = document.getElementById('quota-page-detail-status');
+      detailStatus.textContent = selected.status;
+      detailStatus.className = selected.quotaExceeded ? 'text-danger' : 'text-accent';
+      document.getElementById('quota-page-baseline').textContent = selected.baselineYear ?? 'Tanımlı değil';
+      document.getElementById('quota-page-balance').textContent =
+        selected.hasQuota && selected.hasActual
+          ? `${formatNumber(selected.quotaExceeded ? selected.overage : selected.remaining)} tCO2e ${selected.quotaExceeded ? 'aşım' : 'kalan'}`
+          : 'Yıllık karşılaştırma henüz yapılamaz';
+    });
+  });
+
   document.getElementById('btn-quota-plan')?.addEventListener('click', () => {
     openModal({
       title: 'Yeni Azaltım Planı',

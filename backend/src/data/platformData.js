@@ -1,4 +1,4 @@
-import { calculateDashboardFromEnergy } from '../domain/emissions.js';
+import { calculateDashboardFromEnergy, round } from '../domain/emissions.js';
 import { getEmissionInventory, getLatestEnergyRecords } from '../services/energyData.js';
 import { loadRuntimeSection } from './runtimeStore.js';
 
@@ -23,13 +23,89 @@ export const dashboardTrend = emissionInventory.monthly.map((record) => ({
   actual: record.actual,
 }));
 
+function buildAnnualDistribution(annualRecord) {
+  const total = annualRecord.grossEnergyEmission;
+  return {
+    year: annualRecord.year,
+    total,
+    scope: 'Kapsam 1 + Kapsam 2',
+    note: 'Dönemi bilinmeyen yakıt emisyonları yıllık dağılıma dahil edilmez; ayrı kartta izlenir.',
+    items: [
+      {
+        name: 'Elektrik',
+        value: annualRecord.scope2ElectricityEmission,
+        percent: round((annualRecord.scope2ElectricityEmission / total) * 100, 1),
+        color: '#67D2F5',
+        impactType: 'emission',
+        unit: 'tCO2e',
+      },
+      {
+        name: 'Doğalgaz',
+        value: annualRecord.scope1NaturalGasEmission,
+        percent: round((annualRecord.scope1NaturalGasEmission / total) * 100, 1),
+        color: '#42B7D6',
+        impactType: 'emission',
+        unit: 'tCO2e',
+      },
+    ],
+  };
+}
+
+function buildAnnualQuota({
+  year,
+  actualEmission = null,
+  quotaLimit = null,
+  baselineYear = null,
+  baselineEmission = null,
+}) {
+  const hasQuota = Number.isFinite(quotaLimit);
+  const hasActual = Number.isFinite(actualEmission);
+  const difference = hasQuota && hasActual ? round(quotaLimit - actualEmission, 3) : null;
+  const quotaExceeded = difference !== null && difference < 0;
+  return {
+    year,
+    actualEmission,
+    quotaLimit,
+    baselineYear,
+    baselineEmission,
+    hasQuota,
+    hasActual,
+    usedPercent: hasQuota && hasActual ? round((actualEmission / quotaLimit) * 100, 1) : null,
+    remaining: difference === null ? null : Math.max(0, difference),
+    overage: quotaExceeded ? Math.abs(difference) : 0,
+    quotaExceeded,
+    status: !hasQuota
+      ? 'Kota tanımlı değil'
+      : !hasActual
+        ? 'Yıllık ölçüm bekleniyor'
+        : quotaExceeded ? 'Kota aşıldı' : 'Kota aşılmadı',
+  };
+}
+
+export const annualDistributions = emissionInventory.annual.map(buildAnnualDistribution);
+const latestAnnual = emissionInventory.summary.latestYear;
+const quotaLimit2026 = round(latestAnnual.grossEnergyEmission * 0.95, 3);
+export const annualQuotas = [
+  ...emissionInventory.annual.map((record) => buildAnnualQuota({
+    year: record.year,
+    actualEmission: record.grossEnergyEmission,
+  })),
+  buildAnnualQuota({
+    year: 2026,
+    quotaLimit: quotaLimit2026,
+    baselineYear: latestAnnual.year,
+    baselineEmission: latestAnnual.grossEnergyEmission,
+  }),
+];
+
 const calculated = calculateDashboardFromEnergy(energyRecords, {
-  quotaLimit: 2052.333,
+  quotaLimit: quotaLimit2026,
   quotaYear: 2026,
-  quotaBaselineYear: emissionInventory.summary.latestYear.year,
-  quotaBaselineEmission: emissionInventory.summary.latestYear.grossEnergyEmission,
+  quotaBaselineYear: latestAnnual.year,
+  quotaBaselineEmission: latestAnnual.grossEnergyEmission,
   quotaScope: 'Kapsam 1 + Kapsam 2 (elektrik ve doğal gaz)',
   quotaNote: '2025 ölçülmüş Scope 1+2 baz yılına göre tam %5 azaltım hedefiyle hesaplanan kurumsal emisyon kotasıdır.',
+  reportingYear: latestAnnual.year,
   etsEligible: false,
   etsStatus: 'Üniversitelere özel 2026 kotası bulunmuyor; resmî ETS tahsisi belgelenmedi.',
   etsScreeningThresholdTco2e: 50000,
@@ -41,6 +117,13 @@ const calculated = calculateDashboardFromEnergy(energyRecords, {
 const latestTrend = calculated.trend.at(-1);
 const largestDistributionItem = [...calculated.distribution.items]
   .sort((left, right) => right.value - left.value)[0];
+calculated.summary.annualQuotas = annualQuotas;
+calculated.distribution = {
+  ...annualDistributions.at(-1),
+  selectedYear: annualDistributions.at(-1).year,
+  years: annualDistributions,
+  unassignedFuelEmission: emissionInventory.fuel.totalEmission,
+};
 
 export const dashboard = {
   company,
@@ -52,7 +135,7 @@ export const dashboard = {
   ],
   aiInsights: [
     { type: 'suggestion', title: 'Aylık emisyon trendi', description: `${latestTrend.monthName} ${latestTrend.year} toplam emisyon değeri grafikte gösteriliyor.`, impact: `${latestTrend.actual} tCO2e` },
-    { type: 'risk', title: 'Emisyon dağılımı', description: 'Grafik, elektrik, doğalgaz ve yakıt kaynaklı emisyonların toplam içindeki payını gösteriyor.', impact: `En yüksek pay: ${largestDistributionItem.name} · %${largestDistributionItem.percent}` },
+    { type: 'risk', title: 'Yıllık emisyon dağılımı', description: 'Grafik, seçilen yıldaki elektrik ve doğalgaz emisyonlarının toplam içindeki payını gösteriyor.', impact: `En yüksek pay: ${largestDistributionItem.name} · %${largestDistributionItem.percent}` },
     { type: 'opportunity', title: 'GES üretimi', description: `${latestTrend.monthName} ${latestTrend.year} GES üretimi grafikte gösteriliyor.`, impact: `${latestTrend.solarProductionKwh} kWh` },
   ],
 };
@@ -109,7 +192,7 @@ export const notifications = loadRuntimeSection('notifications', {
   items: [
     { id: 0, category: 'duyuru', type: 'announcement', title: 'Raporlama dönemi açıldı', description: '2026 Q2 raporlama süreci başlatıldı.', time: '30.05.2026', unread: true, actionLabel: 'Raporlara git', actionRoute: 'reporting' },
     { id: 1, category: 'uyari', type: 'warning', title: 'Emisyon artışı', description: 'Mayıs emisyon değeri geçen aya göre yükseldi.', time: '30.05.2026 10:30', unread: true },
-    { id: 2, category: 'hatirlatma', type: 'reminder', title: 'Kota kullanımı', description: `2025 baz yıl emisyonu, 2026 kurumsal kotasının %${calculated.summary.usedPercent} seviyesinde.`, time: '29.05.2026', unread: false },
+    { id: 2, category: 'hatirlatma', type: 'reminder', title: '2026 kotası', description: '2026 kurumsal kotası tanımlandı; yıllık ölçüm tamamlandığında kullanım oranı hesaplanacak.', time: '29.05.2026', unread: false },
   ],
 });
 

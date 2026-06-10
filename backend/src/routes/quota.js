@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { dashboard } from '../data/platformData.js';
+import { annualQuotas, dashboard } from '../data/platformData.js';
 import { quotaPlans } from '../data/operationalData.js';
 import { requireRole } from '../auth/middleware.js';
 import { readNumber, readText } from '../http/validation.js';
@@ -10,6 +10,7 @@ const router = Router();
 router.get('/', (_req, res) => res.json({
   summary: dashboard.summary,
   trend: dashboard.trend,
+  annualQuotas,
   plans: quotaPlans,
   methodology: {
     title: '2026 Kurumsal Emisyon Kotası',
@@ -21,6 +22,7 @@ router.get('/', (_req, res) => res.json({
     ],
     regulatoryNotes: [
       'Üniversiteler için 2026 yılına özel sabit bir karbon kotası bulunmamaktadır.',
+      '2024 ve 2025 için belgelenmiş geçmiş kurumsal kota bulunmadığından bu yıllarda yalnızca gerçekleşen emisyon gösterilir.',
       '50.000 tCO2e değeri kuruma verilecek kota değil, ETS kapsam değerlendirmesinde kullanılan bir eşiktir.',
       'Gerçek bir ETS tahsisi belgelenene kadar kalan kota satılabilir karbon hakkı olarak değerlendirilemez.',
     ],
