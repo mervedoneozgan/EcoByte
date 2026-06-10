@@ -109,29 +109,24 @@ test('renders a dashboard action that opens emission trading', () => {
   assert.match(html, /Satılabilir kota yalnızca belgelenmiş resmî ETS tahsisinden hesaplanır/);
 });
 
-test('renders yearly quota management without a false 2026 overage', () => {
+test('renders yearly quota management with 2024 and 2025 quotas', () => {
   const annualQuotas = [
     {
-      year: 2024, actualEmission: 1397.003, quotaLimit: null, baselineYear: null,
-      hasQuota: false, hasActual: true, usedPercent: null, remaining: null, overage: 0,
-      quotaExceeded: false, status: 'Kota tanımlı değil',
+      year: 2024, actualEmission: 1397.003, quotaLimit: 1327.153, baselineYear: 2024,
+      hasQuota: true, hasActual: true, usedPercent: 105.3, remaining: 0, overage: 69.85,
+      quotaExceeded: true, status: 'Kota aşıldı',
     },
     {
-      year: 2025, actualEmission: 2160.351, quotaLimit: null, baselineYear: null,
-      hasQuota: false, hasActual: true, usedPercent: null, remaining: null, overage: 0,
-      quotaExceeded: false, status: 'Kota tanımlı değil',
-    },
-    {
-      year: 2026, actualEmission: null, quotaLimit: 2052.333, baselineYear: 2025,
-      hasQuota: true, hasActual: false, usedPercent: null, remaining: null, overage: 0,
-      quotaExceeded: false, status: 'Yıllık ölçüm bekleniyor',
+      year: 2025, actualEmission: 2160.351, quotaLimit: 2052.333, baselineYear: 2025,
+      hasQuota: true, hasActual: true, usedPercent: 105.3, remaining: 0, overage: 108.018,
+      quotaExceeded: true, status: 'Kota aşıldı',
     },
   ];
   const html = renderQuotaPage({
     summary: {
       quotaLimit: 2052.333,
       quotaEmission: null,
-      quotaYear: 2026,
+      quotaYear: 2025,
       quotaBaselineYear: 2025,
       quotaBaselineEmission: 2160.351,
       quotaReductionTarget: 108.018,
@@ -151,26 +146,27 @@ test('renders yearly quota management without a false 2026 overage', () => {
     annualQuotas,
     plans: [],
     methodology: {
-      title: '2026 Kurumsal Emisyon Kotası',
+      title: '2024-2025 Kurumsal Emisyon Kotaları',
       legalNature: 'EcoByte içinde kullanılan kurumsal kotadır.',
-      calculation: '2.160,351 × 0,95 = 2.052,333 tCO2e.',
-      regulatoryNotes: ['Üniversitelere özel sabit kota bulunmamaktadır.'],
+      calculation: '2024 için 1.397,003 × 0,95 = 1.327,153 tCO2e; 2025 için 2.160,351 × 0,95 = 2.052,333 tCO2e.',
+      regulatoryNotes: ['2024 ve 2025 için kurumsal azaltım hedefleri tanımlıdır.'],
       exclusions: ['Dönemi belirsiz yakıt dahil değildir.'],
       sources: [{ label: 'Resmî kaynak', url: 'https://example.com' }],
     },
   });
 
   assert.match(html, /Kota Yönetimi/);
-  assert.match(html, /2026 kota limiti/);
+  assert.match(html, /2024-2025 Kurumsal Emisyon Kotaları/);
+  assert.match(html, /2025 kota limiti/);
   assert.match(html, /2\.052,333/);
-  assert.match(html, /Yıllık ölçüm bekleniyor/);
+  assert.match(html, /1\.327,153/);
+  assert.match(html, /Kota aşıldı/);
   assert.match(html, /Yıllık kota karşılaştırması/);
   assert.match(html, /data-quota-page-year="2024"/);
   assert.match(html, /data-quota-page-year="2025"/);
-  assert.match(html, /data-quota-page-year="2026"/);
+  assert.doesNotMatch(html, /data-quota-page-year="2026"/);
   assert.match(html, /Satılabilir kota/);
   assert.match(html, /50\.000/);
-  assert.doesNotMatch(html, /Kota aşıldı/);
 });
 
 test('renders persisted settings preferences as editable controls', () => {

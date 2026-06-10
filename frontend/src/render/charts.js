@@ -73,7 +73,7 @@ export function renderDistributionChart(distribution) {
         </div>
       </div>
       <div class="legend-grid" id="distribution-legend">${renderDistributionLegend(distribution)}</div>
-      <p class="trade-card-note" id="distribution-chart-note">${distribution.note ?? 'Yıllık dağılım elektrik ve doğalgaz emisyonlarını gösterir.'}</p>
+      <p class="trade-card-note" id="distribution-chart-note">${distribution.note ?? 'Yıllık dağılım elektrik, doğalgaz ve dönem atanmamış yakıt emisyonlarını gösterir.'}</p>
     </article>`;
 }
 

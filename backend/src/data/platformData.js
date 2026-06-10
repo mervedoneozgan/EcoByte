@@ -12,6 +12,7 @@ export const company = {
 
 export const energyRecords = getLatestEnergyRecords();
 export const emissionInventory = getEmissionInventory();
+const unassignedFuelEmission = emissionInventory.fuel.totalEmission;
 export const dashboardTrend = emissionInventory.monthly.map((record) => ({
   month: record.month,
   monthName: record.monthName,
@@ -24,12 +25,12 @@ export const dashboardTrend = emissionInventory.monthly.map((record) => ({
 }));
 
 function buildAnnualDistribution(annualRecord) {
-  const total = annualRecord.grossEnergyEmission;
+  const total = round(annualRecord.grossEnergyEmission + unassignedFuelEmission, 3);
   return {
     year: annualRecord.year,
     total,
-    scope: 'Kapsam 1 + Kapsam 2',
-    note: 'Dönemi bilinmeyen yakıt emisyonları yıllık dağılıma dahil edilmez; ayrı kartta izlenir.',
+    scope: 'Kapsam 1 + Kapsam 2 + dönem atanmamış yakıt',
+    note: 'Dönemi bilinmeyen yakıt emisyonları yıllık toplamda ayrı bir dilim olarak gösterilir.',
     items: [
       {
         name: 'Elektrik',
@@ -44,6 +45,14 @@ function buildAnnualDistribution(annualRecord) {
         value: annualRecord.scope1NaturalGasEmission,
         percent: round((annualRecord.scope1NaturalGasEmission / total) * 100, 1),
         color: '#42B7D6',
+        impactType: 'emission',
+        unit: 'tCO2e',
+      },
+      {
+        name: 'Yakıt',
+        value: unassignedFuelEmission,
+        percent: round((unassignedFuelEmission / total) * 100, 1),
+        color: '#F5C76B',
         impactType: 'emission',
         unit: 'tCO2e',
       },
@@ -84,46 +93,56 @@ function buildAnnualQuota({
 
 export const annualDistributions = emissionInventory.annual.map(buildAnnualDistribution);
 const latestAnnual = emissionInventory.summary.latestYear;
-const quotaLimit2026 = round(latestAnnual.grossEnergyEmission * 0.95, 3);
-export const annualQuotas = [
-  ...emissionInventory.annual.map((record) => buildAnnualQuota({
-    year: record.year,
-    actualEmission: record.grossEnergyEmission,
-  })),
+const annual2024 = emissionInventory.annual.find((record) => record.year === 2024) ?? emissionInventory.annual[0];
+const quotaLimit2024 = round(annual2024.grossEnergyEmission * 0.95, 3);
+const quotaLimit2025 = round(latestAnnual.grossEnergyEmission * 0.95, 3);
+const annualQuotaEntries = [
   buildAnnualQuota({
-    year: 2026,
-    quotaLimit: quotaLimit2026,
+    year: annual2024.year,
+    actualEmission: annual2024.grossEnergyEmission,
+    quotaLimit: quotaLimit2024,
+    baselineYear: annual2024.year,
+    baselineEmission: annual2024.grossEnergyEmission,
+  }),
+  buildAnnualQuota({
+    year: latestAnnual.year,
+    actualEmission: latestAnnual.grossEnergyEmission,
+    quotaLimit: quotaLimit2025,
     baselineYear: latestAnnual.year,
     baselineEmission: latestAnnual.grossEnergyEmission,
   }),
 ];
+export const annualQuotas = [
+  ...annualQuotaEntries,
+];
 
 const calculated = calculateDashboardFromEnergy(energyRecords, {
-  quotaLimit: quotaLimit2026,
-  quotaYear: 2026,
+  quotaLimit: quotaLimit2025,
+  quotaYear: latestAnnual.year,
   quotaBaselineYear: latestAnnual.year,
   quotaBaselineEmission: latestAnnual.grossEnergyEmission,
   quotaScope: 'Kapsam 1 + Kapsam 2 (elektrik ve doğal gaz)',
-  quotaNote: '2025 ölçülmüş Scope 1+2 baz yılına göre tam %5 azaltım hedefiyle hesaplanan kurumsal emisyon kotasıdır.',
+  quotaNote: '2024 ve 2025 ölçülmüş Scope 1+2 baz yıllarına göre tam %5 azaltım hedefiyle hesaplanan kurumsal emisyon kotalarıdır.',
   reportingYear: latestAnnual.year,
   etsEligible: false,
-  etsStatus: 'Üniversitelere özel 2026 kotası bulunmuyor; resmî ETS tahsisi belgelenmedi.',
+  etsStatus: 'Üniversitelere özel resmî ETS tahsisi belgelenmedi; kurumsal kotalar yalnızca EcoByte içi azaltım izleme için kullanılır.',
   etsScreeningThresholdTco2e: 50000,
   marketPrice: 25.4,
-  fuelEmission: emissionInventory.fuel.totalEmission,
+  fuelEmission: unassignedFuelEmission,
   solarPositiveImpact: emissionInventory.summary.latestYear.avoidedEmission,
   solarFacilities: emissionInventory.solar.facilities,
 });
 const latestTrend = calculated.trend.at(-1);
+calculated.summary.annualQuotas = annualQuotas;
+const latestDistribution = annualDistributions.at(-1);
+calculated.distribution = {
+  ...latestDistribution,
+  selectedYear: latestDistribution.year,
+  years: annualDistributions,
+  unassignedFuelEmission,
+};
 const largestDistributionItem = [...calculated.distribution.items]
   .sort((left, right) => right.value - left.value)[0];
-calculated.summary.annualQuotas = annualQuotas;
-calculated.distribution = {
-  ...annualDistributions.at(-1),
-  selectedYear: annualDistributions.at(-1).year,
-  years: annualDistributions,
-  unassignedFuelEmission: emissionInventory.fuel.totalEmission,
-};
 
 export const dashboard = {
   company,
@@ -135,7 +154,7 @@ export const dashboard = {
   ],
   aiInsights: [
     { type: 'suggestion', title: 'Aylık emisyon trendi', description: `${latestTrend.monthName} ${latestTrend.year} toplam emisyon değeri grafikte gösteriliyor.`, impact: `${latestTrend.actual} tCO2e` },
-    { type: 'risk', title: 'Yıllık emisyon dağılımı', description: 'Grafik, seçilen yıldaki elektrik ve doğalgaz emisyonlarının toplam içindeki payını gösteriyor.', impact: `En yüksek pay: ${largestDistributionItem.name} · %${largestDistributionItem.percent}` },
+    { type: 'risk', title: 'Yıllık emisyon dağılımı', description: 'Grafik, seçilen yıldaki elektrik, doğalgaz ve yakıt emisyonlarının toplam içindeki payını gösteriyor.', impact: `En yüksek pay: ${largestDistributionItem.name} · %${largestDistributionItem.percent}` },
     { type: 'opportunity', title: 'GES üretimi', description: `${latestTrend.monthName} ${latestTrend.year} GES üretimi grafikte gösteriliyor.`, impact: `${latestTrend.solarProductionKwh} kWh` },
   ],
 };
@@ -192,7 +211,7 @@ export const notifications = loadRuntimeSection('notifications', {
   items: [
     { id: 0, category: 'duyuru', type: 'announcement', title: 'Raporlama dönemi açıldı', description: '2026 Q2 raporlama süreci başlatıldı.', time: '30.05.2026', unread: true, actionLabel: 'Raporlara git', actionRoute: 'reporting' },
     { id: 1, category: 'uyari', type: 'warning', title: 'Emisyon artışı', description: 'Mayıs emisyon değeri geçen aya göre yükseldi.', time: '30.05.2026 10:30', unread: true },
-    { id: 2, category: 'hatirlatma', type: 'reminder', title: '2026 kotası', description: '2026 kurumsal kotası tanımlandı; yıllık ölçüm tamamlandığında kullanım oranı hesaplanacak.', time: '29.05.2026', unread: false },
+    { id: 2, category: 'hatirlatma', type: 'reminder', title: '2024-2025 kotaları', description: '2024 ve 2025 kurumsal kotaları tanımlandı; yıllık ölçümler tamamlandıkça kullanım oranı hesaplanacak.', time: '29.05.2026', unread: false },
   ],
 });
 

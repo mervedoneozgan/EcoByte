@@ -46,13 +46,13 @@ Enerji kaynak dosyalarının tamamı backend tarafından okunur, SHA-256 parmak 
 
 Tüm ham kayıtlar, faktörler, formüller ve doğrulama uyarıları platformdaki **Veri ve Formüller** sayfasında görülebilir.
 
-## 2026 Kurumsal Emisyon Kotası
+## 2024-2025 Kurumsal Emisyon Kotaları
 
-Platformdaki `2.052,333 tCO2e` kota limiti, 2025 yılında ölçülen elektrik ve doğal gaz kaynaklı `2.160,351 tCO2e` Kapsam 1+2 emisyonuna tam `%5` azaltım uygulanarak hesaplanır. Bu kurumsal kota, resmî ETS tahsisinden ayrı tutulur.
+Platformdaki `1.327,153 tCO2e` ve `2.052,333 tCO2e` kota limitleri, sırasıyla 2024 ve 2025 yıllarında ölçülen elektrik ve doğal gaz kaynaklı Kapsam 1+2 emisyonlarına tam `%5` azaltım uygulanarak hesaplanır. Bu kurumsal kotalar, resmî ETS tahsisinden ayrı tutulur.
 
 Dönemi doğrulanmamış yakıt emisyonları kota kullanımına dahil edilmez. GES kaynaklı kaçınılan emisyon pozitif etki olarak ayrı izlenir ve brüt emisyonlardan düşülmez. Resmî ETS tahsisi belgelenene kadar satılabilir kota ve tahmini ticaret geliri `0` olarak hesaplanır.
 
-Dashboard dağılımı yıllık çalışır: 2024 ve 2025 butonları yalnızca ilgili yılın elektrik ve doğalgaz emisyonlarını gösterir. Dönemi bilinmeyen yakıt herhangi bir yıla atanmaz. Kota karşılaştırması da yalnızca aynı yıl için hem kota hem gerçekleşen emisyon bulunduğunda aşım veya kalan üretir; 2026 tam yıl ölçümü tamamlanana kadar durum `Yıllık ölçüm bekleniyor` olarak gösterilir.
+Dashboard dağılımı yıllık çalışır: 2024 ve 2025 butonları ilgili yılın elektrik, doğalgaz ve dönem atanmamış yakıt emisyonlarını birlikte gösterir. Dönemi bilinmeyen yakıt ayrı bir dilim olarak gösterilir. Kota karşılaştırması da yalnızca aynı yıl için hem kota hem gerçekleşen emisyon bulunduğunda aşım veya kalan üretir.
 
 Kota planları, satış emirleri, danışmanlık talepleri, bildirim durumları, ayarlar ve rapor arşivi backend yeniden başlatıldığında kaybolmaz. Rapor metrikleri her açılışta güncel gerçek envanterden yeniden hesaplanır. Farklı bir çalışma verisi konumu için `OPERATIONAL_STORE_PATH` tanımlanabilir.
 

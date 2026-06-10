@@ -13,16 +13,15 @@ router.get('/', (_req, res) => res.json({
   annualQuotas,
   plans: quotaPlans,
   methodology: {
-    title: '2026 Kurumsal Emisyon Kotası',
-    legalNature: 'EcoByte içinde azaltım performansını yönetmek için kullanılan kurumsal kotadır; resmî ETS tahsisi değildir.',
-    calculation: '2025 ölçülmüş elektrik ve doğal gaz emisyonu olan 2.160,351 tCO2e üzerinden tam %5 azaltım uygulanmıştır: 2.160,351 × 0,95 = 2.052,333 tCO2e.',
+    title: '2024-2025 Kurumsal Emisyon Kotaları',
+    legalNature: 'EcoByte içinde azaltım performansını yönetmek için kullanılan kurumsal kotalardır; resmî ETS tahsisi değildir.',
+    calculation: '2024 için 1.397,003 × 0,95 = 1.327,153 tCO2e; 2025 için 2.160,351 × 0,95 = 2.052,333 tCO2e.',
     exclusions: [
       'Dönemi doğrulanmamış yakıt emisyonları kota kullanımına dahil edilmez.',
       'GES kaynaklı kaçınılan emisyon pozitif etki olarak ayrı izlenir; brüt emisyonlardan düşülmez.',
     ],
     regulatoryNotes: [
-      'Üniversiteler için 2026 yılına özel sabit bir karbon kotası bulunmamaktadır.',
-      '2024 ve 2025 için belgelenmiş geçmiş kurumsal kota bulunmadığından bu yıllarda yalnızca gerçekleşen emisyon gösterilir.',
+      '2024 ve 2025 için kurumsal azaltım kotaları tanımlandı; bunlar resmî ETS tahsisi değildir.',
       '50.000 tCO2e değeri kuruma verilecek kota değil, ETS kapsam değerlendirmesinde kullanılan bir eşiktir.',
       'Gerçek bir ETS tahsisi belgelenene kadar kalan kota satılabilir karbon hakkı olarak değerlendirilemez.',
     ],

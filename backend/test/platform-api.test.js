@@ -438,7 +438,7 @@ test('explains why Turkish sell orders are rejected without an ETS allocation', 
   assert.match(body.message, /resmî ETS tahsisi bulunmadığı/i);
 });
 
-test('exposes the documented and exactly calculated 2026 emission quota', async () => {
+test('exposes the documented and exactly calculated 2024-2025 emission quotas', async () => {
   const quota = await request('/quota');
 
   assert.equal(quota.summary.quotaLimit, 2052.333);
@@ -451,9 +451,12 @@ test('exposes the documented and exactly calculated 2026 emission quota', async 
   assert.equal(quota.summary.quotaStatus, 'Yıllık ölçüm bekleniyor');
   assert.equal(quota.summary.quotaExceeded, false);
   assert.equal(quota.summary.sellableSurplus, 0);
-  assert.deepEqual(quota.annualQuotas.map((item) => item.year), [2024, 2025, 2026]);
-  assert.equal(quota.annualQuotas.find((item) => item.year === 2026).hasActual, false);
-  assert.match(quota.methodology.title, /kurumsal emisyon kotası/i);
+  assert.deepEqual(quota.annualQuotas.map((item) => item.year), [2024, 2025]);
+  assert.equal(quota.annualQuotas.find((item) => item.year === 2024).quotaLimit, 1327.153);
+  assert.equal(quota.annualQuotas.find((item) => item.year === 2024).quotaExceeded, true);
+  assert.equal(quota.annualQuotas.find((item) => item.year === 2025).quotaLimit, 2052.333);
+  assert.equal(quota.annualQuotas.find((item) => item.year === 2025).quotaExceeded, true);
+  assert.match(quota.methodology.title, /2024-2025/);
   assert.ok(quota.methodology.sources.length >= 3);
 });
 
@@ -462,13 +465,13 @@ test('serves year-specific emission distributions and separates unassigned fuel'
   const solar = await request('/dashboard/solar');
 
   assert.equal(distribution.selectedYear, 2025);
-  assert.equal(distribution.total, 2160.351);
+  assert.equal(distribution.total, 2862.575);
   assert.equal(distribution.unassignedFuelEmission, 702.224);
-  assert.equal(distribution.items.length, 2);
+  assert.equal(distribution.items.length, 3);
   assert.deepEqual(distribution.years.map((item) => item.year), [2024, 2025]);
-  assert.equal(distribution.years.find((item) => item.year === 2024).total, 1397.003);
-  assert.equal(distribution.years.find((item) => item.year === 2025).total, 2160.351);
-  assert.equal(distribution.items.some((item) => /yakıt/i.test(item.name)), false);
+  assert.equal(distribution.years.find((item) => item.year === 2024).total, 2099.227);
+  assert.equal(distribution.years.find((item) => item.year === 2025).total, 2862.575);
+  assert.equal(distribution.items.some((item) => /yakıt/i.test(item.name)), true);
   assert.equal(
     distribution.items.reduce((sum, item) => sum + item.percent, 0),
     100
