@@ -1,4 +1,5 @@
 import { BRAND } from '../utils/brandColors.js';
+import { formatEuro } from '../utils/format.js';
 
 const SCENARIO_COLORS = {
   base: BRAND.lightGreen,
@@ -17,7 +18,7 @@ export function renderFinancialScenarios(scenarios) {
       <div class="scenario-row">
         <div>
           <p class="scenario-row__label">${s.label}</p>
-          <p class="scenario-row__value">${Number(s.value).toLocaleString('tr-TR')} €</p>
+          <p class="scenario-row__value">${formatEuro(s.value)}</p>
         </div>
         <div class="sparkline-wrap sparkline-wrap--wide">
           <canvas id="spark-scenario-${index}" height="32"></canvas>

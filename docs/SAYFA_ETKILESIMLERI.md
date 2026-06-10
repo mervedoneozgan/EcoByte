@@ -7,12 +7,12 @@
 | **Sekmeler** (Talepler, Uzmanlar, Hizmetler, Randevular, Belgelerim) | İlgili panel açılır |
 | **Yeni Talep Oluştur** | Modal form → gönderince listeye eklenir + toast |
 | **Özet kartları** (Toplam/Açık/Devam/Tamamlanan) | Tabloyu duruma göre filtreler |
-| **📄 Detay** | Talep detay modalı + "Uzmana Yaz" |
+| **📄 Detay** | Talep detay modalı + kalıcı "Uzmana Yaz" mesaj akışı |
 | **→ Git** | Uzmanlar sekmesine geçer |
-| **Randevu kartı** | Randevu modalı: Katıl / Yeniden planla |
+| **Randevu kartı** | Randevu modalı: görüşme bağlantısını aç / yeni tarihi backend üzerine kaydet |
 | **Uzman → Randevu Al** | Yeni talep modalı |
 | **Hizmet → Talep Oluştur** | Modal, başlık otomatik dolar |
-| **Belge ⬇ / 👁** | İndir / önizle toast (API bekleniyor) |
+| **Belge ⬇ / 👁** | Belge özetini indir / belge bilgilerini önizle |
 
 ## 8. Bildirimler (`#/bildirimler`)
 
@@ -27,18 +27,13 @@
 
 | Öğe | Tıklanınca |
 |-----|------------|
-| **Sekmeler** (8 adet) | İlgili ayar paneli (diğerleri placeholder) |
+| **Sekmeler** (8 adet) | İlgili ayar panelini ve kaydedilmiş tercihleri açar |
 | **Güncelle** | Profil düzenleme modalı → kaydet |
 | **Sistem Bilgilerini İndir** | JSON dosyası indirilir |
-| **Değiştir** (logo) | Dosya seç → önizleme güncellenir |
-| **Yapılandır** (diğer sekmeler) | "Backend hazır olunca" toast |
+| **Değiştir** (logo) | Dosya seç → optimize et → backend üzerine kalıcı kaydet |
+| **Kaydet** (diğer sekmeler) | Tip doğrulamalı ayarları backend üzerine kalıcı olarak kaydeder |
 
 ## Veri bağlama
 
-Backend hazır olunca aynı endpoint'ler:
-
-- `GET /api/consultancy`
-- `GET /api/notifications`
-- `POST` endpoint'leri sonradan eklenebilir
-
-Frontend: `src/pages/*.js` içindeki `init*Page()` fonksiyonları API çağrılarıyla güncellenir.
+Danışmanlık, bildirim ve ayar etkileşimleri backend API üzerinden yürütülür ve operasyonel çalışma
+deposunda kalıcı olarak saklanır.

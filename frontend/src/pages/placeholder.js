@@ -1,12 +1,10 @@
-export function renderPlaceholderPage(title, routeLabel) {
+export function renderPlaceholderPage(_title, routeLabel) {
   return `
     <div class="page">
-      <h2 class="page-title">${title}</h2>
-      <div class="card placeholder-card">
-        <p class="placeholder-card__text">
-          <strong>${routeLabel}</strong> sayfası henüz tasarlanmadı.
-          Bu bölümü <code>src/pages/</code> altında Tailwind + JS ile ekleyebilirsiniz.
-        </p>
-      </div>
+      <section class="card api-error-card">
+        <p class="card__label">EcoByte</p>
+        <h2 class="page-title page-title--left">Sayfa bulunamadı</h2>
+        <p class="page-header__subtitle">${routeLabel} için tanımlı bir platform sayfası bulunmuyor.</p>
+      </section>
     </div>`;
 }

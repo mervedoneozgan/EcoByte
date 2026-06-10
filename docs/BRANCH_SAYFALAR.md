@@ -23,18 +23,18 @@ Merve'nin sistemi: `main` ← dokunma · `develop` ← birleştirme · `feature/
 
 ### Sayfa 7
 - `frontend/src/pages/consultancy.js`
-- `frontend/src/data/mockConsultancy.js`
+- Danışmanlık verisi backend API üzerinden yüklenir.
 - `backend/src/routes/consultancy.js`
 - `docs/SAYFA_ETKILESIMLERI.md` (7. bölüm)
 
 ### Sayfa 8
 - `frontend/src/pages/notifications.js`
-- `frontend/src/data/mockNotifications.js`
+- Bildirim verisi backend API üzerinden yüklenir.
 - `backend/src/routes/notifications.js`
 
 ### Sayfa 9
 - `frontend/src/pages/settings.js`
-- `frontend/src/data/mockSettings.js`
+- Ayar verisi backend API üzerinden yüklenir.
 - `backend/src/routes/settings.js`
 - `frontend/src/utils/ecobyteLogo.js`
 - `frontend/public/ecobyte-logo-transparent.png`
@@ -42,7 +42,7 @@ Merve'nin sistemi: `main` ← dokunma · `develop` ← birleştirme · `feature/
 ### Ortak (her PR'da veya ilk PR'da)
 - `frontend/src/router.js`, `navigation.js`, `api/client.js`, `utils/ui.js`
 - `frontend/src/render/sidebar.js`, `app.js`, `main.js`, `index.css`, `styles/brand.css`
-- `backend/src/index.js`, `backend/src/data/mockData.js`
+- `backend/src/index.js`, `backend/src/data/platformData.js`
 - Dashboard vb. (`pages/dashboard.js`, `render/*`, `charts/*`)
 
 İlk PR (Sayfa 7) tüm proje iskeletini içerir; 8 ve 9 sonraki PR'larda sadece kendi dosyalarını ekler.

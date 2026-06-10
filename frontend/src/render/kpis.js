@@ -1,39 +1,41 @@
 import { icons } from '../utils/icons.js';
 import { formatNumber } from '../utils/format.js';
 
-export function renderKPICards(summary, trend) {
-  const trendData = trend?.map((r) => r.actual) || [9800, 10200, 10800, 11500, 11800, 12450];
-  const profitTrend = [45, 52, 48, 55, 60, 58, 62, 65];
-  const quotaClass = summary.quotaExceeded ? 'text-danger' : 'text-accent';
+export function renderKPICards(summary) {
+  const trendPrefix = summary.trendPercent >= 0 ? '+' : '';
 
   return `
     <div class="kpi-grid">
       <article class="card">
-        <p class="card__label">Toplam Emisyon</p>
+        <p class="card__label">Toplam Brüt Emisyon</p>
         <p class="card__value">${formatNumber(summary.totalEmission)} <span class="card__unit">tCO2e</span></p>
-        <p class="card__trend">${icons.trending} +${summary.trendPercent}% geçen aya göre</p>
+        <p class="card__trend">${icons.trending} ${trendPrefix}${summary.trendPercent}% son ay enerji değişimi</p>
+        <p class="card__meta">Elektrik + doğalgaz + dönem atanmamış yakıt</p>
         <div class="sparkline-wrap"><canvas id="spark-emission" height="36"></canvas></div>
       </article>
 
       <article class="card">
-        <p class="card__label">Emisyon Kotası</p>
-        <p class="card__value">${formatNumber(summary.quotaLimit)} <span class="card__unit">tCO2e</span></p>
-        <div class="progress">
-          <div class="progress__labels"><span>Kullanım</span><span>${summary.usedPercent}%</span></div>
-          <div class="progress__track"><div class="progress__bar" style="width:${summary.usedPercent}%"></div></div>
-        </div>
+        <p class="card__label">Elektrik Emisyonu</p>
+        <p class="card__value">${formatNumber(summary.electricityEmission)} <span class="card__unit">tCO2e</span></p>
+        <p class="card__meta">Şebeke elektriği · Kapsam 2</p>
       </article>
 
       <article class="card">
-        <p class="card__label card__label--icon">${icons.target} Kota Durumu</p>
-        <p class="card__status ${quotaClass}">${summary.quotaStatus}</p>
-        <p class="card__meta">Kalan: ${formatNumber(summary.remaining)} tCO2e</p>
+        <p class="card__label">Doğalgaz Emisyonu</p>
+        <p class="card__value">${formatNumber(summary.naturalGasEmission)} <span class="card__unit">tCO2e</span></p>
+        <p class="card__meta">Doğrudan yakıt kullanımı · Kapsam 1</p>
       </article>
 
       <article class="card">
-        <p class="card__label card__label--icon">${icons.euro} Potansiyel Kazanç / Vergi</p>
-        <p class="card__profit">+${formatNumber(summary.potentialProfit)} €</p>
-        <div class="sparkline-wrap"><canvas id="spark-profit" height="36"></canvas></div>
+        <p class="card__label">Yakıt Emisyonu</p>
+        <p class="card__value">${formatNumber(summary.fuelEmissionUnassigned)} <span class="card__unit">tCO2e</span></p>
+        <p class="card__meta">Mazot + benzin + LPG · dönem atanmamış</p>
+      </article>
+
+      <article class="card card--positive">
+        <p class="card__label">GES Üretimi</p>
+        <p class="card__value text-accent">${formatNumber(summary.solarProductionKwh)} <span class="card__unit">kWh</span></p>
+        <p class="card__meta">Pozitif etki: +${formatNumber(summary.solarPositiveImpact)} tCO2</p>
       </article>
     </div>`;
 }

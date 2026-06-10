@@ -5,19 +5,19 @@ const INSIGHT_CONFIG = {
     icon: icons.lightbulb,
     modifier: 'insight--suggestion',
     badge: 'insight__badge--suggestion',
-    label: 'Öneri',
+    label: 'Trend Özeti',
   },
   risk: {
     icon: icons.alert,
     modifier: 'insight--risk',
     badge: 'insight__badge--risk',
-    label: 'Risk',
+    label: 'Dağılım Özeti',
   },
   opportunity: {
     icon: icons.sparkles,
     modifier: 'insight--opportunity',
     badge: 'insight__badge--opportunity',
-    label: 'Fırsat',
+    label: 'Üretim Özeti',
   },
 };
 
@@ -34,7 +34,7 @@ export function renderAIInsights(insights) {
           <h4 class="insight__title">${insight.title}</h4>
           <p class="insight__text">${insight.description}</p>
           ${insight.impact ? `<p class="insight__impact">${insight.impact}</p>` : ''}
-          <button type="button" class="btn btn--outline">Aksiyon Al</button>
+          <button type="button" class="btn btn--outline" data-open-ai-analysis>Detaylı İncele</button>
         </article>`;
     })
     .join('');
@@ -42,7 +42,7 @@ export function renderAIInsights(insights) {
   return `
     <article class="card">
       <div class="card__heading-row">
-        <h3 class="card__heading">AI Destekli İçgörüler</h3>
+        <h3 class="card__heading">Grafik Özetleri</h3>
         <span class="icon icon--muted">${icons.brain}</span>
       </div>
       <div class="insight-grid">${cards}</div>

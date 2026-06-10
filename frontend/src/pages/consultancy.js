@@ -1,5 +1,6 @@
-import { openModal, closeModal, showToast, bindPageTabs } from '../utils/ui.js';
-import { navigateTo } from '../utils/navigation.js';
+import { openModal, closeModal, showToast, bindPageTabs, downloadBlob } from '../utils/ui.js';
+import { api } from '../api/client.js';
+import { escapeHtml } from '../utils/text.js';
 
 const STATUS_CLASS = {
   ongoing: 'pill pill--yellow',
@@ -32,10 +33,10 @@ function renderRequestsTable(requests) {
     .map(
       (r) => `
     <tr class="table-row" data-request-id="${r.id}">
-      <td>${r.title}</td>
-      <td>${r.expert}</td>
-      <td>${r.date}</td>
-      <td><span class="${STATUS_CLASS[r.status] || 'pill'}">${r.statusLabel}</span></td>
+      <td>${escapeHtml(r.title)}</td>
+      <td>${escapeHtml(r.expert)}</td>
+      <td>${escapeHtml(r.date)}</td>
+      <td><span class="${STATUS_CLASS[r.status] || 'pill'}">${escapeHtml(r.statusLabel)}</span></td>
       <td class="table-actions">
         <button type="button" class="icon-btn" data-action="detail" data-id="${r.id}" title="Detay">📄</button>
         <button type="button" class="icon-btn" data-action="goto" data-id="${r.id}" title="Uzmana git">→</button>
@@ -50,13 +51,13 @@ function renderPanels(data) {
 
   const appointmentsAll = appointments
     .map(
-      (a, i) => `
-    <div class="appointment-card appointment-card--clickable" data-appointment-index="${i}" role="button" tabindex="0">
-      <div class="appointment-card__avatar">${a.avatar}</div>
+      (a) => `
+    <div class="appointment-card appointment-card--clickable" data-appointment-id="${a.id}" role="button" tabindex="0">
+      <div class="appointment-card__avatar">${escapeHtml(a.avatar)}</div>
       <div>
-        <p class="appointment-card__name">${a.expert}</p>
-        <p class="appointment-card__service">${a.service}</p>
-        <p class="appointment-card__time">${a.datetime}</p>
+        <p class="appointment-card__name">${escapeHtml(a.expert)}</p>
+        <p class="appointment-card__service">${escapeHtml(a.service)}</p>
+        <p class="appointment-card__time">${escapeHtml(a.datetime)}</p>
       </div>
     </div>`
     )
@@ -66,11 +67,11 @@ function renderPanels(data) {
     .map(
       (e) => `
     <article class="expert-card" data-expert-id="${e.id}">
-      <div class="expert-card__avatar">${e.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}</div>
+      <div class="expert-card__avatar">${escapeHtml(e.name.split(' ').map((n) => n[0]).join('').slice(0, 2))}</div>
       <div>
-        <h4 class="expert-card__name">${e.name}</h4>
-        <p class="expert-card__meta">${e.specialty} · ⭐ ${e.rating}</p>
-        <p class="expert-card__meta">${e.requests} tamamlanan talep</p>
+        <h4 class="expert-card__name">${escapeHtml(e.name)}</h4>
+        <p class="expert-card__meta">${escapeHtml(e.specialty)} · ⭐ ${escapeHtml(e.rating)}</p>
+        <p class="expert-card__meta">${escapeHtml(e.requests)} tamamlanan talep</p>
       </div>
       <button type="button" class="btn btn--outline btn--sm" data-action="book-expert" data-id="${e.id}">Randevu Al</button>
     </article>`
@@ -81,9 +82,9 @@ function renderPanels(data) {
     .map(
       (s) => `
     <article class="service-card" data-service-id="${s.id}">
-      <h4 class="service-card__name">${s.name}</h4>
-      <p class="service-card__meta">Süre: ${s.duration}</p>
-      <p class="service-card__price">${s.price}</p>
+      <h4 class="service-card__name">${escapeHtml(s.name)}</h4>
+      <p class="service-card__meta">Süre: ${escapeHtml(s.duration)}</p>
+      <p class="service-card__price">${escapeHtml(s.price)}</p>
       <button type="button" class="btn btn--primary btn--sm" data-action="request-service" data-id="${s.id}">Talep Oluştur</button>
     </article>`
     )
@@ -93,11 +94,11 @@ function renderPanels(data) {
     .map(
       (d) => `
     <tr data-doc-id="${d.id}">
-      <td>${d.name}</td>
-      <td>${d.date}</td>
-      <td>${d.size}</td>
+      <td>${escapeHtml(d.name)}</td>
+      <td>${escapeHtml(d.date)}</td>
+      <td>${escapeHtml(d.size)}</td>
       <td class="table-actions">
-        <button type="button" class="icon-btn" data-action="download-doc" data-id="${d.id}" title="İndir">⬇</button>
+        <button type="button" class="icon-btn" data-action="download-doc" data-id="${d.id}" title="Belge özetini indir">⬇</button>
         <button type="button" class="icon-btn" data-action="preview-doc" data-id="${d.id}" title="Önizle">👁</button>
       </td>
     </tr>`
@@ -168,7 +169,10 @@ export function renderConsultancyPage(data) {
 
   return `
     <div class="page" id="page-consultancy">
-      <h2 class="page-title">7. Danışmanlık</h2>
+      <div>
+        <h2 class="page-title page-title--left">Danışmanlık</h2>
+        <p class="page-header__subtitle">Uzman, hizmet, talep ve randevu süreçlerini tek ekrandan yönetin</p>
+      </div>
 
       <div class="page-toolbar">
         <div class="page-tabs" id="consultancy-tabs">${tabsHtml}</div>
@@ -198,14 +202,14 @@ export function renderConsultancyPage(data) {
     </div>`;
 }
 
-function openNewRequestModal() {
-  const experts = pageData.experts.map((e) => `<option value="${e.id}">${e.name}</option>`).join('');
+function openNewRequestModal({ expertId = '', title = '' } = {}) {
+  const experts = pageData.experts.map((e) => `<option value="${e.id}">${escapeHtml(e.name)}</option>`).join('');
   openModal({
     title: 'Yeni Danışmanlık Talebi',
     bodyHtml: `
       <form id="form-new-request" class="form">
         <label class="form__label">Talep başlığı
-          <input class="form__input" name="title" required placeholder="Örn. Karbon ayak izi analizi" />
+          <input class="form__input" name="title" value="${escapeHtml(title)}" required placeholder="Örn. Karbon ayak izi analizi" />
         </label>
         <label class="form__label">Uzman
           <select class="form__input" name="expertId">${experts}</select>
@@ -218,8 +222,9 @@ function openNewRequestModal() {
       <button type="button" class="btn btn--ghost" data-modal-close>İptal</button>
       <button type="button" class="btn btn--primary" id="submit-new-request">Talebi Gönder</button>`,
   });
+  if (expertId) document.getElementById('form-new-request').expertId.value = String(expertId);
 
-  document.getElementById('submit-new-request')?.addEventListener('click', () => {
+  document.getElementById('submit-new-request')?.addEventListener('click', async () => {
     const form = document.getElementById('form-new-request');
     const title = form.title.value.trim();
     if (!title) {
@@ -235,12 +240,17 @@ function openNewRequestModal() {
       status: 'open',
       statusLabel: 'Açık',
     };
-    pageData.requests.unshift(newReq);
-    pageData.summary.total += 1;
-    pageData.summary.open += 1;
-    document.getElementById('requests-tbody').innerHTML = renderRequestsTable(pageData.requests);
-    closeModal();
-    showToast('Talep oluşturuldu. Uzman 24 saat içinde dönüş yapacak.', 'success');
+    try {
+      const savedRequest = await api.createConsultancyRequest({ ...newReq, note: form.note.value });
+      pageData.requests.unshift(savedRequest);
+      pageData.summary.total += 1;
+      pageData.summary.open += 1;
+      document.getElementById('requests-tbody').innerHTML = renderRequestsTable(pageData.requests);
+      closeModal();
+      showToast('Talep oluşturuldu. Uzman 24 saat içinde dönüş yapacak.', 'success');
+    } catch (error) {
+      showToast(error.message, 'error');
+    }
   });
 }
 
@@ -251,43 +261,141 @@ function openRequestDetail(id) {
     title: req.title,
     bodyHtml: `
       <dl class="detail-list">
-        <div><dt>Uzman</dt><dd>${req.expert}</dd></div>
-        <div><dt>Durum</dt><dd>${req.statusLabel}</dd></div>
-        <div><dt>Oluşturma</dt><dd>${req.date}</dd></div>
-        <div><dt>Son güncelleme</dt><dd>${req.date}</dd></div>
+        <div><dt>Uzman</dt><dd>${escapeHtml(req.expert)}</dd></div>
+        <div><dt>Durum</dt><dd>${escapeHtml(req.statusLabel)}</dd></div>
+        <div><dt>Oluşturma</dt><dd>${escapeHtml(req.date)}</dd></div>
+        <div><dt>Mesaj</dt><dd>${escapeHtml(req.note || 'Açıklama eklenmedi')}</dd></div>
+        <div><dt>Gönderilen mesaj</dt><dd>${req.messages?.length ?? 0}</dd></div>
       </dl>
-      <p class="modal-hint">Mesajlaşma ve dosya yükleme backend bağlandığında aktif olacak.</p>`,
+      <p class="modal-hint">Talep akışı güncel.</p>`,
     footerHtml: `
       <button type="button" class="btn btn--ghost" data-modal-close>Kapat</button>
       <button type="button" class="btn btn--primary" id="btn-msg-expert">Uzmana Yaz</button>`,
   });
   document.getElementById('btn-msg-expert')?.addEventListener('click', () => {
-    showToast(`"${req.expert}" ile mesaj kutusu açılacak (API bekleniyor)`, 'info');
+    openMessageModal(req);
   });
 }
 
-function openAppointmentModal(index) {
-  const a = pageData.appointments[index];
+function openMessageModal(request) {
+  openModal({
+    title: `${request.expert} ile mesajlaş`,
+    bodyHtml: `
+      <form id="form-consultancy-message" class="form">
+        <label class="form__label">Mesaj
+          <textarea class="form__input form__textarea" name="message" rows="4" maxlength="2000" required></textarea>
+        </label>
+      </form>`,
+    footerHtml: `
+      <button type="button" class="btn btn--ghost" data-modal-close>İptal</button>
+      <button type="button" class="btn btn--primary" id="send-consultancy-message">Gönder</button>`,
+  });
+  document.getElementById('send-consultancy-message')?.addEventListener('click', async () => {
+    const form = document.getElementById('form-consultancy-message');
+    try {
+      const message = await api.sendConsultancyMessage(request.id, { message: form.message.value });
+      request.messages ??= [];
+      request.messages.push(message);
+      closeModal();
+      showToast('Mesaj uzmana gönderildi', 'success');
+    } catch (error) {
+      showToast(error.message, 'error');
+    }
+  });
+}
+
+function localDateTimeValue(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 16);
+}
+
+function openRescheduleModal(appointment) {
+  openModal({
+    title: 'Randevuyu Yeniden Planla',
+    bodyHtml: `
+      <form id="form-reschedule" class="form">
+        <label class="form__label">Yeni tarih ve saat
+          <input class="form__input" name="scheduledAt" type="datetime-local" value="${localDateTimeValue(appointment.scheduledAt)}" required />
+        </label>
+      </form>`,
+    footerHtml: `
+      <button type="button" class="btn btn--ghost" data-modal-close>İptal</button>
+      <button type="button" class="btn btn--primary" id="save-reschedule">Kaydet</button>`,
+  });
+  document.getElementById('save-reschedule')?.addEventListener('click', async () => {
+    const form = document.getElementById('form-reschedule');
+    try {
+      const updated = await api.rescheduleConsultancyAppointment(appointment.id, {
+        scheduledAt: new Date(form.scheduledAt.value).toISOString(),
+      });
+      Object.assign(appointment, updated);
+      document.querySelectorAll(`[data-appointment-id="${appointment.id}"] .appointment-card__time`)
+        .forEach((element) => { element.textContent = appointment.datetime; });
+      closeModal();
+      showToast('Randevu yeniden planlandı', 'success');
+    } catch (error) {
+      showToast(error.message, 'error');
+    }
+  });
+}
+
+function openAppointmentModal(id) {
+  const a = pageData.appointments.find((appointment) => appointment.id === Number(id));
   if (!a) return;
   openModal({
     title: 'Randevu Detayı',
     bodyHtml: `
       <dl class="detail-list">
-        <div><dt>Uzman</dt><dd>${a.expert}</dd></div>
-        <div><dt>Hizmet</dt><dd>${a.service}</dd></div>
-        <div><dt>Tarih / Saat</dt><dd>${a.datetime}</dd></div>
+        <div><dt>Uzman</dt><dd>${escapeHtml(a.expert)}</dd></div>
+        <div><dt>Hizmet</dt><dd>${escapeHtml(a.service)}</dd></div>
+        <div><dt>Tarih / Saat</dt><dd>${escapeHtml(a.datetime)}</dd></div>
       </dl>`,
     footerHtml: `
       <button type="button" class="btn btn--ghost" id="btn-reschedule">Yeniden Planla</button>
       <button type="button" class="btn btn--primary" id="btn-join">Toplantıya Katıl</button>`,
   });
-  document.getElementById('btn-join')?.addEventListener('click', () => {
-    showToast('Video görüşme linki e-posta ile gönderildi (demo)', 'success');
-    closeModal();
+  document.getElementById('btn-join')?.addEventListener('click', async () => {
+    try {
+      const result = await api.joinConsultancyAppointment(a.id);
+      window.open(result.joinUrl, '_blank', 'noopener,noreferrer');
+      closeModal();
+      showToast('Görüşme bağlantısı açıldı', 'success');
+    } catch (error) {
+      showToast(error.message, 'error');
+    }
   });
   document.getElementById('btn-reschedule')?.addEventListener('click', () => {
-    showToast('Takvim ekranı açılacak (API bekleniyor)', 'info');
+    openRescheduleModal(a);
   });
+}
+
+async function previewDocument(id) {
+  try {
+    const document = await api.previewConsultancyDocument(id);
+    openModal({
+      title: document.name,
+      bodyHtml: `
+        <dl class="detail-list">
+          <div><dt>Tarih</dt><dd>${escapeHtml(document.date)}</dd></div>
+          <div><dt>Kaynak boyut</dt><dd>${escapeHtml(document.size)}</dd></div>
+          <div><dt>Açıklama</dt><dd>${escapeHtml(document.description)}</dd></div>
+        </dl>`,
+    });
+  } catch (error) {
+    showToast(error.message, 'error');
+  }
+}
+
+async function downloadDocument(id) {
+  try {
+    const { blob, filename } = await api.downloadConsultancyDocument(id);
+    downloadBlob(filename, blob);
+    showToast('Belge özeti indirildi', 'success');
+  } catch (error) {
+    showToast(error.message, 'error');
+  }
 }
 
 export function initConsultancyPage() {
@@ -316,7 +424,7 @@ export function initConsultancyPage() {
     const service = e.target.closest('[data-action="request-service"]');
     const dl = e.target.closest('[data-action="download-doc"]');
     const preview = e.target.closest('[data-action="preview-doc"]');
-    const apt = e.target.closest('[data-appointment-index]');
+    const apt = e.target.closest('[data-appointment-id]');
 
     if (detail) openRequestDetail(detail.dataset.id);
     if (goto) {
@@ -326,19 +434,22 @@ export function initConsultancyPage() {
     }
     if (book) {
       const ex = pageData.experts.find((x) => x.id === Number(book.dataset.id));
-      showToast(`${ex?.name} için randevu formu açılacak`, 'info');
-      openNewRequestModal();
+      showToast(`${ex?.name} seçildi`, 'info');
+      openNewRequestModal({ expertId: ex?.id });
     }
     if (service) {
       const s = pageData.services.find((x) => x.id === Number(service.dataset.id));
-      openNewRequestModal();
-      setTimeout(() => {
-        const input = document.querySelector('#form-new-request input[name="title"]');
-        if (input && s) input.value = s.name;
-      }, 50);
+      openNewRequestModal({ title: s?.name });
     }
-    if (dl) showToast('Belge indiriliyor (API bekleniyor)', 'info');
-    if (preview) showToast('Belge önizleme açılacak (API bekleniyor)', 'info');
-    if (apt) openAppointmentModal(Number(apt.dataset.appointmentIndex));
+    if (dl) downloadDocument(dl.dataset.id);
+    if (preview) previewDocument(preview.dataset.id);
+    if (apt) openAppointmentModal(apt.dataset.appointmentId);
+  });
+  page.addEventListener('keydown', (event) => {
+    const appointment = event.target.closest('[data-appointment-id]');
+    if (appointment && (event.key === 'Enter' || event.key === ' ')) {
+      event.preventDefault();
+      openAppointmentModal(appointment.dataset.appointmentId);
+    }
   });
 }

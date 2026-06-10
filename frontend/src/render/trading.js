@@ -1,5 +1,5 @@
 import { icons } from '../utils/icons.js';
-import { formatNumber } from '../utils/format.js';
+import { formatEuro, formatNumber } from '../utils/format.js';
 
 export function renderTradingCard(summary) {
   return `
@@ -16,9 +16,12 @@ export function renderTradingCard(summary) {
         </div>
         <div class="data-list__row data-list__row--total">
           <dt>Tahmini toplam kazanç</dt>
-          <dd class="text-accent">${formatNumber(Math.round(summary.estimatedTradingProfit))} €</dd>
+          <dd class="text-accent">${formatEuro(Math.round(summary.estimatedTradingProfit))}</dd>
         </div>
       </dl>
-      <button type="button" class="btn btn--primary btn--block">Piyasaya Sat</button>
+      <p class="trade-card-note">
+        Kalan emisyon kotasını piyasa fiyatıyla çarparak satılabilir karbon hakkının tahmini gelirini gösterir.
+      </p>
+      <button type="button" class="btn btn--primary btn--block" data-open-trading>Piyasaya Sat</button>
     </article>`;
 }

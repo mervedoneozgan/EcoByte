@@ -1,5 +1,7 @@
 /** Modal, toast ve ortak UI yardımcıları */
 
+import { escapeHtml } from './text.js';
+
 let modalRoot = null;
 
 function ensureModalRoot() {
@@ -28,7 +30,7 @@ export function openModal({ title, bodyHtml, footerHtml = '' }) {
   const root = ensureModalRoot();
   root.classList.add('modal-root--open');
   root.querySelector('.modal__body').innerHTML = `
-    ${title ? `<h3 class="modal__title">${title}</h3>` : ''}
+    ${title ? `<h3 class="modal__title">${escapeHtml(title)}</h3>` : ''}
     <div class="modal__content">${bodyHtml}</div>
     ${footerHtml ? `<div class="modal__footer">${footerHtml}</div>` : ''}`;
   document.body.style.overflow = 'hidden';
@@ -84,4 +86,13 @@ export function downloadJson(filename, data) {
   a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+export function downloadBlob(filename, blob) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

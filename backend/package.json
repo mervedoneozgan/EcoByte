@@ -1,12 +1,13 @@
 {
   "name": "ecobyte-backend",
   "version": "1.0.0",
-  "description": "EcoByte API — veri bağlantısı buraya eklenecek",
+  "description": "EcoByte gerçek enerji envanteri, emisyon hesaplama ve kurumsal PDF raporlama API'si",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "node --watch src/index.js"
+    "dev": "node --watch src/index.js",
+    "test": "node --test"
   },
   "dependencies": {
     "cors": "^2.8.5",

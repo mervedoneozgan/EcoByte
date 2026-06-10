@@ -1,4 +1,4 @@
 import './index.css';
 import { initApp } from './app.js';
 
-initApp();
+initApp().catch(console.error);

@@ -1,186 +1,91 @@
-# EcoByte — Karbon Yönetim Platformu
+# EcoByte Karbon Yönetim Platformu
 
-TÜBİTAK projesi kapsamında geliştirilen karbon emisyon yönetim dashboard'u.
+EcoByte; enerji tüketimi, GES üretimi, karbon emisyonu, kota yönetimi ve kurumsal raporlamayı tek platformda birleştirir.
 
-**Frontend:** Vanilla JavaScript + Tailwind CSS + Vite  
-**Backend:** Node.js + Express (mock API — veritabanı bağlantısı eklenecek)  
-**Veritabanı:** PostgreSQL (`database/` klasörü — şema sizin tarafınızdan)
-
----
+Platform yalnızca backend API üzerinden gerçek kaynak verilerini kullanır. Backend erişilemezse arayüz yerel örnek veriye geçmez; bağlantı hatasını açıkça gösterir.
 
 ## Teknoloji
 
-| Katman | Kullanılan |
-|--------|------------|
-| Arayüz | HTML, CSS (Tailwind 4), JavaScript (ES modules) |
-| Build | Vite 8 |
-| Grafikler | Chart.js |
-| API | Express 4 + CORS |
-| (Planlanan) DB | PostgreSQL |
+- Frontend: Vanilla JavaScript, Vite, Chart.js
+- Backend: Node.js, Express
+- PDF raporlama: Python 3, ReportLab ve pypdf kalite denetimi
+- Kaynak veri: `backend/data/energy/` altındaki doğrulanan CSV dosyaları
+- Oturum: süreli ve yeniden başlatmalarda korunan sunucu oturumu
+- Operasyonel kayıtlar: atomik olarak `backend/.runtime/operational-state.json` dosyasında saklanır
 
-> Grafikler için isteğe bağlı **ApexCharts** eklenebilir: `npm install apexcharts`
+## Çalıştırma
 
----
+Backend:
 
-## Proje yapısı
-
-```
-ecobyte/
-├── database/                 # PostgreSQL şema & seed (siz ekleyeceksiniz)
-│   └── README.md
-├── backend/
-│   ├── src/
-│   │   ├── index.js          # Express sunucu
-│   │   ├── data/mockData.js  # Geçici mock JSON
-│   │   └── routes/           # API route'ları
-│   ├── .env.example
-│   └── package.json
-├── frontend/
-│   ├── public/
-│   │   └── ecobyte-logo-transparent.png
-│   └── src/
-│       ├── main.js
-│       ├── app.js
-│       ├── router.js           # Hash tabanlı sayfa yönlendirme
-│       ├── api/client.js       # Backend istekleri
-│       ├── pages/              # Sayfa HTML + etkileşimler
-│       ├── render/             # Sidebar, header, KPI, grafikler
-│       ├── charts/chartSetup.js
-│       ├── data/mock*.js       # Backend yokken örnek veri
-│       ├── styles/brand.css    # Marka renkleri
-│       └── utils/              # ui (modal/toast), navigation, logo
-├── docs/
-│   └── SAYFA_ETKILESIMLERI.md  # Sayfa 7-8-9 tıklama davranışları
-└── README.md
+```powershell
+cd backend
+npm install
+py -3 -m pip install -r requirements.txt
+npm run dev
 ```
 
----
+Frontend:
 
-## Sayfalar (sol menü)
-
-| # | Sayfa | Hash route | Durum |
-|---|--------|------------|--------|
-| 1 | Genel Bakış | `#/` | Tam dashboard (KPI, grafikler, AI içgörüler) |
-| 2–6 | Emisyon, Raporlama, Kota, Ticaret, Senaryolar, AI | `#/emisyon` … | Placeholder |
-| **7** | **Danışmanlık** | `#/danismanlik` | Talepler, uzmanlar, randevular, belgeler |
-| **8** | **Bildirimler** | `#/bildirimler` | Filtreli bildirim listesi |
-| **9** | **Ayarlar** | `#/ayarlar` | Profil, sistem, logo |
-
-Tıklanabilir öğelerin detaylı listesi: [docs/SAYFA_ETKILESIMLERI.md](docs/SAYFA_ETKILESIMLERI.md)
-
----
-
-## Kurulum ve çalıştırma
-
-### Gereksinimler
-
-- Node.js 18+
-- npm
-
-### 1. Frontend
-
-```bash
+```powershell
 cd frontend
 npm install
-npm run dev
+npm run dev -- --host 127.0.0.1
 ```
 
-Tarayıcı: **http://localhost:5173** (port doluysa 5174)
+- Platform: `http://127.0.0.1:5173`
+- API: `http://127.0.0.1:5002`
 
-Production build:
+## Gerçek Veri Akışı
 
-```bash
-npm run build
-npm run preview
-```
+Enerji kaynak dosyalarının tamamı backend tarafından okunur, SHA-256 parmak izleri ve satır kontrolleriyle doğrulanır. Hesaplanan ana kaynaklar:
 
-### 2. Backend (isteğe bağlı)
+- Elektrik tüketimi ve Kapsam 2 emisyonu
+- Doğalgaz tüketimi ve Kapsam 1 emisyonu
+- Mazot, benzin ve LPG emisyonları
+- GES üretimi ve ayrı gösterilen pozitif etki
 
-```bash
-cd backend
-cp .env.example .env
-npm install
-npm run dev
-```
+Tüm ham kayıtlar, faktörler, formüller ve doğrulama uyarıları platformdaki **Veri ve Formüller** sayfasında görülebilir.
 
-API: **http://localhost:5000**
+Kota planları, satış emirleri, danışmanlık talepleri, bildirim durumları, ayarlar ve rapor arşivi backend yeniden başlatıldığında kaybolmaz. Rapor metrikleri her açılışta güncel gerçek envanterden yeniden hesaplanır. Farklı bir çalışma verisi konumu için `OPERATIONAL_STORE_PATH` tanımlanabilir.
 
-- Backend **çalışıyorsa** → frontend API'den veri çeker  
-- Backend **kapalıysa** → `frontend/src/data/mock*.js` kullanılır (sarı uyarı bandı görünmez)
+Danışmanlık ekranında talep mesajları, randevu yeniden planlama/katılım kayıtları ve belge özetleri API
+üzerinden çalışır. Ayarlar ekranındaki kullanıcı, yetki, bildirim, entegrasyon, veri, güvenlik ve
+yedekleme tercihleri tip doğrulamasıyla kalıcı olarak kaydedilir.
+Marka logosu yüklenirken tarayıcıda optimize edilir, backend üzerinde saklanır ve sonraki oturumlarda
+otomatik olarak geri yüklenir.
 
----
+## Kurumsal PDF Raporları
 
-## API uç noktaları
+Raporlama sayfasındaki PDF dosyaları indirildiği anda gerçek envanterden oluşturulur. PDF içeriği:
+
+- Yönetici özeti
+- Elektrik, doğalgaz ve yakıt emisyon dağılımı
+- Aylık enerji ve emisyon tablosu
+- GES üretim özeti
+- Matematiksel formüller
+- Emisyon faktörleri ve güncellik bilgisi
+- Veri kalitesi kontrolleri ve denetim izi
+
+PDF motoru Python 3 ile çalışır. Üretim sonunda her sayfa pypdf ile denetlenir; 12 sayfadan kısa, boş veya gereksiz seyrek raporlar API tarafından reddedilir. Windows dışında `PYTHON3_BIN=python3` tanımlanabilir.
+
+İlgili API uçları:
 
 | Method | Endpoint | Açıklama |
-|--------|----------|----------|
-| GET | `/api/health` | Sunucu durumu |
-| GET | `/api/dashboard/company` | Firma bilgisi |
-| GET | `/api/dashboard/summary` | KPI özet |
-| GET | `/api/dashboard/trend` | Emisyon trendi |
-| GET | `/api/dashboard/distribution` | Emisyon dağılımı |
-| GET | `/api/dashboard/scenarios` | Finansal senaryolar |
-| GET | `/api/dashboard/ai-insights` | AI içgörüleri |
-| GET | `/api/consultancy` | Danışmanlık sayfası verisi |
-| GET | `/api/notifications` | Bildirimler |
-| GET | `/api/settings` | Ayarlar |
+|---|---|---|
+| GET | `/api/reports` | Gerçek envanterden oluşturulabilir raporları listeler |
+| POST | `/api/reports` | Güncel envanter için yeni rapor kaydı oluşturur |
+| GET | `/api/reports/:id/pdf` | Kurumsal PDF raporu üretir ve indirir |
+| GET | `/api/data-catalog` | Ham veriler, formüller ve doğrulama kayıtları |
+| GET | `/api/emissions` | Hesaplanan emisyon envanteri |
 
-Vite dev sunucusu `/api` isteklerini `localhost:5000`'e proxy eder.
+## Doğrulama
 
----
+```powershell
+cd backend
+npm test
 
-## Marka renkleri
-
-Tanımlı dosya: `frontend/src/styles/brand.css`
-
-| Kullanım | Hex | CSS değişkeni |
-|----------|-----|----------------|
-| Primary Button | `#67D2F5` | `--color-primary` |
-| Hover | `#42B7D6` | `--color-hover` |
-| Accent | `#A5F279` | `--color-accent` |
-| Secondary Accent | `#6DCC5B` | `--color-secondary` |
-| Light Text | `#BDF4FF` | `--color-text` |
-
-Gradient: `linear-gradient(135deg, #67D2F5 0%, #42B7D6 55%, #A5F279 100%)`
-
-Logo: `frontend/public/ecobyte-logo-transparent.png` (şeffaf arka plan)
-
----
-
-## Veri bağlama (backend / database)
-
-1. **`database/`** — `schema.sql`, `seed.sql` yazın  
-2. **`backend/src/routes/`** — `mockData.js` yerine PostgreSQL sorguları  
-3. **`backend/src/db.js`** — bağlantı modülü ekleyin (pg)  
-4. Frontend **`api/client.js`** endpoint yolları aynı kalabilir  
-
-Frontend sayfa mantığı:
-
-- `pages/consultancy.js` → `initConsultancyPage()`
-- `pages/notifications.js` → `initNotificationsPage()`
-- `pages/settings.js` → `initSettingsPage()`
-
-Bu dosyalardaki demo işlemler gerçek `POST/PUT` API çağrılarıyla değiştirilir.
-
----
-
-## Ekip notları
-
-- **Frontend (Merve & Şeyma):** Tailwind + JS ile arayüz; `pages/` ve `index.css` üzerinde çalışın  
-- **Veri tarafı:** `database/` + `backend/` — API'yi bağlayınca mock kaldırılır  
-- **Grafik:** Chart.js hazır; ApexCharts tercih edilebilir  
-
----
-
-## GitHub
-
-```bash
-git init
-git add .
-git commit -m "EcoByte: frontend + backend iskelet"
-git remote add origin https://github.com/mervedoneozgan/EcoByte.git
-git branch -M main
-git push -u origin main
+cd ../frontend
+npm run lint
+npm test
+npm run build
 ```
-
-`.gitignore` kök dizinde — `node_modules`, `.env`, `dist` hariç tutulur.
