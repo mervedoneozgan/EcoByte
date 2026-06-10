@@ -159,7 +159,7 @@ export function mountDashboardCharts(data) {
   if (quotaCanvas) {
     const used = data.summary.quotaExceeded
       ? data.summary.quotaLimit
-      : data.summary.quotaLimit - data.summary.remaining;
+      : data.summary.quotaEmission ?? data.summary.quotaLimit - data.summary.remaining;
     createQuotaGauge(quotaCanvas, used, data.summary.remaining, data.summary.overage || 0);
   }
   if (sparkEmission) createSparkline(sparkEmission, data.trend.map((row) => row.actual));

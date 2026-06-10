@@ -7,6 +7,8 @@ import { renderTradingCard } from '../src/render/trading.js';
 import { renderLoginPage } from '../src/pages/login.js';
 import { renderSettingsPage } from '../src/pages/settings.js';
 import { renderConsultancyPage } from '../src/pages/consultancy.js';
+import { renderQuotaPage } from '../src/pages/quota.js';
+import { bindModalCloseActions } from '../src/utils/ui.js';
 
 test('escapes user-controlled values before HTML rendering', () => {
   assert.equal(
@@ -65,6 +67,48 @@ test('renders a dashboard action that opens emission trading', () => {
     estimatedTradingProfit: 2540,
   });
   assert.match(html, /data-open-trading/);
+  assert.match(html, /Satılabilir kota yalnızca belgelenmiş resmî ETS tahsisinden hesaplanır/);
+});
+
+test('renders the old quota management view with the exact 2026 quota calculation', () => {
+  const html = renderQuotaPage({
+    summary: {
+      quotaLimit: 2052.333,
+      quotaEmission: 2160.351,
+      quotaYear: 2026,
+      quotaBaselineYear: 2025,
+      quotaBaselineEmission: 2160.351,
+      quotaReductionTarget: 108.018,
+      quotaReductionPercent: 5,
+      quotaScope: 'Kapsam 1 + Kapsam 2',
+      quotaStatus: 'Kota aşıldı',
+      etsStatus: 'Resmî ETS tahsisi bulunmuyor.',
+      etsScreeningThresholdTco2e: 50000,
+      usedPercent: 105.3,
+      quotaExceeded: true,
+      overage: 108.02,
+      remaining: 0,
+      sellableSurplus: 0,
+      marketPrice: 25.4,
+      estimatedTradingProfit: 0,
+    },
+    trend: [{ month: 'Ocak', monthName: 'Ocak', actual: 180 }],
+    plans: [],
+    methodology: {
+      title: '2026 Kurumsal Emisyon Kotası',
+      legalNature: 'EcoByte içinde kullanılan kurumsal kotadır.',
+      calculation: '2.160,351 × 0,95 = 2.052,333 tCO2e.',
+      regulatoryNotes: ['Üniversitelere özel sabit kota bulunmamaktadır.'],
+      exclusions: ['Dönemi belirsiz yakıt dahil değildir.'],
+      sources: [{ label: 'Resmî kaynak', url: 'https://example.com' }],
+    },
+  });
+
+  assert.match(html, /Kota Yönetimi/);
+  assert.match(html, /2026 kota limiti/);
+  assert.match(html, /2\.052,333/);
+  assert.match(html, /Satılabilir kota/);
+  assert.match(html, /50\.000/);
 });
 
 test('renders persisted settings preferences as editable controls', () => {
@@ -93,4 +137,20 @@ test('escapes consultancy values rendered from the API', () => {
   });
   assert.doesNotMatch(html, /<img src=x/);
   assert.match(html, /&lt;img src=x/);
+});
+
+test('closes modals from dynamically rendered cancel buttons', () => {
+  let clickHandler;
+  let closeCount = 0;
+  const root = {
+    addEventListener(type, handler) {
+      if (type === 'click') clickHandler = handler;
+    },
+  };
+
+  bindModalCloseActions(root, () => { closeCount += 1; });
+  clickHandler({ target: { closest: (selector) => selector === '[data-modal-close]' ? {} : null } });
+  clickHandler({ target: { closest: () => null } });
+
+  assert.equal(closeCount, 1);
 });

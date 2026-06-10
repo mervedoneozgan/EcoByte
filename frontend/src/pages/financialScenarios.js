@@ -14,7 +14,7 @@ function buildRows(data) {
   return [
     { name: 'Enerji verimliliği', reduction: electricity * 0.12, investment: 42000, saving: base * 0.18, payback: '18 ay' },
     { name: 'Doğalgaz optimizasyonu', reduction: gas * 0.09, investment: 26000, saving: base * 0.11, payback: '14 ay' },
-    { name: 'Kota ticareti', reduction: 0, investment: 0, saving: base, payback: 'Anlık' },
+    { name: 'Kota ticareti', reduction: 0, investment: 0, saving: base, payback: 'Tahsis gerekli' },
   ];
 }
 

@@ -33,7 +33,7 @@ router.post('/orders', requireRole('admin'), (req, res) => {
   );
   const capacity = tradingCapacity();
   if (SELL_ORDER_TYPES.includes(type) && amount > capacity.availableCapacity) {
-    return res.status(400).json({ message: 'Emir miktarı satılabilir kotaya uygun değil.' });
+    return res.status(400).json({ message: 'Resmî ETS tahsisi bulunmadığı için satışa uygun kapasite yok.' });
   }
   const order = {
     id: `ORD-${Date.now()}`,

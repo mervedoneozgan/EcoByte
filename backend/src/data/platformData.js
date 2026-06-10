@@ -24,7 +24,15 @@ export const dashboardTrend = emissionInventory.monthly.map((record) => ({
 }));
 
 const calculated = calculateDashboardFromEnergy(energyRecords, {
-  quotaLimit: 15000,
+  quotaLimit: 2052.333,
+  quotaYear: 2026,
+  quotaBaselineYear: emissionInventory.summary.latestYear.year,
+  quotaBaselineEmission: emissionInventory.summary.latestYear.grossEnergyEmission,
+  quotaScope: 'Kapsam 1 + Kapsam 2 (elektrik ve doğal gaz)',
+  quotaNote: '2025 ölçülmüş Scope 1+2 baz yılına göre tam %5 azaltım hedefiyle hesaplanan kurumsal emisyon kotasıdır.',
+  etsEligible: false,
+  etsStatus: 'Üniversitelere özel 2026 kotası bulunmuyor; resmî ETS tahsisi belgelenmedi.',
+  etsScreeningThresholdTco2e: 50000,
   marketPrice: 25.4,
   fuelEmission: emissionInventory.fuel.totalEmission,
   solarPositiveImpact: emissionInventory.summary.latestYear.avoidedEmission,
@@ -101,7 +109,7 @@ export const notifications = loadRuntimeSection('notifications', {
   items: [
     { id: 0, category: 'duyuru', type: 'announcement', title: 'Raporlama dönemi açıldı', description: '2026 Q2 raporlama süreci başlatıldı.', time: '30.05.2026', unread: true, actionLabel: 'Raporlara git', actionRoute: 'reporting' },
     { id: 1, category: 'uyari', type: 'warning', title: 'Emisyon artışı', description: 'Mayıs emisyon değeri geçen aya göre yükseldi.', time: '30.05.2026 10:30', unread: true },
-    { id: 2, category: 'hatirlatma', type: 'reminder', title: 'Kota kullanımı', description: `Yıllık kota kullanımınız %${calculated.summary.usedPercent} seviyesinde.`, time: '29.05.2026', unread: false },
+    { id: 2, category: 'hatirlatma', type: 'reminder', title: 'Kota kullanımı', description: `2025 baz yıl emisyonu, 2026 kurumsal kotasının %${calculated.summary.usedPercent} seviyesinde.`, time: '29.05.2026', unread: false },
   ],
 });
 

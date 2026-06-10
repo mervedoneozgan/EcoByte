@@ -7,7 +7,7 @@ export function renderTradingCard(summary) {
       <h3 class="card__heading card__heading--icon">${icons.swap} Emisyon Ticaret Sistemi</h3>
       <dl class="data-list">
         <div class="data-list__row">
-          <dt>Piyasada satılabilir</dt>
+          <dt>Piyasada satılabilir kota</dt>
           <dd>${formatNumber(summary.sellableSurplus)} tCO2e</dd>
         </div>
         <div class="data-list__row">
@@ -20,8 +20,8 @@ export function renderTradingCard(summary) {
         </div>
       </dl>
       <p class="trade-card-note">
-        Kalan emisyon kotasını piyasa fiyatıyla çarparak satılabilir karbon hakkının tahmini gelirini gösterir.
+        Satılabilir kota yalnızca belgelenmiş resmî ETS tahsisinden hesaplanır. Mevcut durumda resmî tahsis olmadığı için değer 0'dır.
       </p>
-      <button type="button" class="btn btn--primary btn--block" data-open-trading>Piyasaya Sat</button>
+      <button type="button" class="btn btn--primary btn--block" data-open-trading>Emisyon Ticaretini İncele</button>
     </article>`;
 }

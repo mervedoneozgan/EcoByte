@@ -46,6 +46,12 @@ Enerji kaynak dosyalarının tamamı backend tarafından okunur, SHA-256 parmak 
 
 Tüm ham kayıtlar, faktörler, formüller ve doğrulama uyarıları platformdaki **Veri ve Formüller** sayfasında görülebilir.
 
+## 2026 Kurumsal Emisyon Kotası
+
+Platformdaki `2.052,333 tCO2e` kota limiti, 2025 yılında ölçülen elektrik ve doğal gaz kaynaklı `2.160,351 tCO2e` Kapsam 1+2 emisyonuna tam `%5` azaltım uygulanarak hesaplanır. Bu kurumsal kota, resmî ETS tahsisinden ayrı tutulur.
+
+Dönemi doğrulanmamış yakıt emisyonları kota kullanımına dahil edilmez. GES kaynaklı kaçınılan emisyon pozitif etki olarak ayrı izlenir ve brüt emisyonlardan düşülmez. Resmî ETS tahsisi belgelenene kadar satılabilir kota ve tahmini ticaret geliri `0` olarak hesaplanır.
+
 Kota planları, satış emirleri, danışmanlık talepleri, bildirim durumları, ayarlar ve rapor arşivi backend yeniden başlatıldığında kaybolmaz. Rapor metrikleri her açılışta güncel gerçek envanterden yeniden hesaplanır. Farklı bir çalışma verisi konumu için `OPERATIONAL_STORE_PATH` tanımlanabilir.
 
 Danışmanlık ekranında talep mesajları, randevu yeniden planlama/katılım kayıtları ve belge özetleri API

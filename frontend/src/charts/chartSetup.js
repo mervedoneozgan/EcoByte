@@ -243,7 +243,7 @@ export function createQuotaGauge(canvas, used, remaining, overage = 0) {
   return new Chart(canvas, {
     type: 'doughnut',
     data: {
-      labels: exceeded ? ['Kullanılan', 'Aşım'] : ['Kullanılan', 'Kalan'],
+      labels: exceeded ? ['Kota limiti', 'Aşım'] : ['Kullanılan', 'Kalan'],
       datasets: [
         {
           data: exceeded ? [used, overage] : [used, remaining],

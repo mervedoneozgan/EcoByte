@@ -166,7 +166,7 @@ export function calculateSolarAvoidedEmission(kwh) {
 }
 
 export function calculateDashboardFromEnergy(records, config = {}) {
-  const quotaLimit = config.quotaLimit ?? 15000;
+  const quotaLimit = config.quotaLimit ?? 2052.333;
   const marketPrice = config.marketPrice ?? 25.4;
   const fuelEmission = round(config.fuelEmission ?? 0, 3);
   const solarPositiveImpact = round(config.solarPositiveImpact ?? 0, 3);
@@ -219,11 +219,20 @@ export function calculateDashboardFromEnergy(records, config = {}) {
   const trendPercent = previous.actual
     ? round(((current.actual - previous.actual) / previous.actual) * 100, 1)
     : 0;
-  const remaining = round(quotaLimit - totalEmission, 2);
-  const usedPercent = Math.min(100, round((totalEmission / quotaLimit) * 100, 1));
+  const quotaEmission = energyEmission;
+  const remaining = round(quotaLimit - quotaEmission, 2);
+  const usedPercent = quotaLimit
+    ? round((quotaEmission / quotaLimit) * 100, 1)
+    : 0;
   const quotaExceeded = remaining < 0;
-  const sellableSurplus = Math.max(0, remaining);
+  const etsEligible = config.etsEligible ?? false;
+  const sellableSurplus = etsEligible ? Math.max(0, remaining) : 0;
   const estimatedTradingProfit = round(sellableSurplus * marketPrice, 2);
+  const baselineEmission = round(config.quotaBaselineEmission ?? quotaEmission, 3);
+  const reductionTarget = round(baselineEmission - quotaLimit, 3);
+  const reductionPercent = baselineEmission
+    ? round((reductionTarget / baselineEmission) * 100, 1)
+    : 0;
 
   const distributionItemsRaw = [
     {
@@ -263,11 +272,22 @@ export function calculateDashboardFromEnergy(records, config = {}) {
       solarPositiveImpact,
       trendPercent,
       quotaLimit,
+      quotaEmission,
+      quotaYear: config.quotaYear ?? 2026,
+      quotaScope: config.quotaScope ?? 'Kapsam 1 + Kapsam 2 (elektrik ve doğal gaz)',
+      quotaBaselineYear: config.quotaBaselineYear ?? 2025,
+      quotaBaselineEmission: baselineEmission,
+      quotaReductionTarget: reductionTarget,
+      quotaReductionPercent: reductionPercent,
+      quotaNote: config.quotaNote ?? '2025 baz yılına göre belirlenen kurumsal emisyon kotasıdır.',
       usedPercent,
       remaining: Math.max(0, remaining),
       overage: quotaExceeded ? Math.abs(remaining) : 0,
       quotaStatus: quotaExceeded ? 'Kota aşıldı' : 'Kota aşılmadı',
       quotaExceeded,
+      etsEligible,
+      etsStatus: config.etsStatus ?? 'Resmî ETS tahsisi bulunmuyor; kapsam doğrulaması gerekli.',
+      etsScreeningThresholdTco2e: config.etsScreeningThresholdTco2e ?? 50000,
       potentialProfit: estimatedTradingProfit,
       marketPrice,
       sellableSurplus,

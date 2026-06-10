@@ -101,14 +101,14 @@ export function renderSolarProductionChart(solar) {
 }
 
 export function renderQuotaGauge(summary) {
-  const used = summary.quotaExceeded
-    ? summary.quotaLimit
-    : summary.quotaLimit - summary.remaining;
+  const used = summary.quotaEmission ?? (
+    summary.quotaExceeded ? summary.quotaLimit : summary.quotaLimit - summary.remaining
+  );
 
   return `
     <article class="card card--chart">
       <h3 class="card__heading">Emisyon Kotası</h3>
-      <p class="card__meta">Toplam emisyon trendinden ayrı kota görünümü</p>
+      <p class="card__meta">${summary.quotaYear} kurumsal kota limiti · ${summary.quotaBaselineYear} Scope 1+2 baz yılı</p>
       <div class="chart-box chart-box--gauge"><canvas id="chart-quota"></canvas></div>
       <div class="gauge-footer">
         <p class="gauge-footer__percent">${summary.usedPercent}%</p>

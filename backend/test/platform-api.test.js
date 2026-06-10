@@ -239,7 +239,7 @@ test('generates a corporate PDF report from the real inventory', async () => {
 test('persists operational actions in the runtime store', async () => {
   const order = await request('/trading/orders', {
     method: 'POST',
-    body: JSON.stringify({ amount: 10, price: 25.4, type: 'Limit satış' }),
+    body: JSON.stringify({ amount: 10, price: 25.4, type: 'Alış emri' }),
   });
   const plan = await request('/quota/plans', {
     method: 'POST',
@@ -408,34 +408,48 @@ test('persists report definitions and rebuilds metrics from the inventory', asyn
   assert.equal(restartedReport.metrics.grossEmission, report.metrics.grossEmission);
 });
 
-test('reserves open sell orders from the available trading capacity', async () => {
+test('does not create sellable capacity without an official ETS allocation', async () => {
   const trading = await request('/trading');
-  assert.ok(trading.safeReserve > 0);
-  assert.ok(trading.reservedByOpenOrders > 0);
-  assert.ok(trading.availableCapacity < (await request('/dashboard/summary')).sellableSurplus);
+  const summary = await request('/dashboard/summary');
+  assert.equal(summary.etsEligible, false);
+  assert.equal(summary.sellableSurplus, 0);
+  assert.equal(trading.availableCapacity, 0);
 
   const response = await fetch(`${baseUrl}/trading/orders`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ amount: trading.availableCapacity + 1, price: 25.4, type: 'Limit satış' }),
+    body: JSON.stringify({ amount: 1, price: 25.4, type: 'Limit satış' }),
   });
   assert.equal(response.status, 400);
 });
 
-test('accepts Turkish emission trading order types', async () => {
-  const trading = await request('/trading');
+test('explains why Turkish sell orders are rejected without an ETS allocation', async () => {
   const response = await fetch(`${baseUrl}/trading/orders`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json; charset=utf-8' },
     body: JSON.stringify({
-      amount: trading.availableCapacity + 1,
+      amount: 1,
       price: 25.4,
       type: 'Limit satış',
     }),
   });
   const body = await response.json();
   assert.equal(response.status, 400);
-  assert.match(body.message, /satılabilir kotaya uygun değil/);
+  assert.match(body.message, /resmî ETS tahsisi bulunmadığı/i);
+});
+
+test('exposes the documented and exactly calculated 2026 emission quota', async () => {
+  const quota = await request('/quota');
+
+  assert.equal(quota.summary.quotaLimit, 2052.333);
+  assert.equal(quota.summary.quotaBaselineEmission, 2160.351);
+  assert.equal(quota.summary.quotaLimit, Number((quota.summary.quotaBaselineEmission * 0.95).toFixed(3)));
+  assert.equal(quota.summary.quotaReductionTarget, 108.018);
+  assert.equal(quota.summary.quotaReductionPercent, 5);
+  assert.equal(quota.summary.quotaEmission, quota.summary.energyEmission);
+  assert.equal(quota.summary.sellableSurplus, 0);
+  assert.match(quota.methodology.title, /kurumsal emisyon kotası/i);
+  assert.ok(quota.methodology.sources.length >= 3);
 });
 
 test('separates emission distribution from solar production', async () => {

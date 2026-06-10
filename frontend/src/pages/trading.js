@@ -42,26 +42,26 @@ export function renderTradingPage(data) {
       <div class="page-toolbar">
         <div>
           <h2 class="page-title page-title--left">Emisyon Ticaret Sistemi</h2>
-          <p class="page-header__subtitle">Kullanılmayan emisyon kotasını koruma payı bırakarak satış emrine dönüştürün</p>
+          <p class="page-header__subtitle">Kota ve resmî ETS tahsis durumuna göre emisyon ticareti yönetimi</p>
         </div>
       </div>
 
       <section class="card trading-guide" aria-labelledby="trading-guide-title">
         <div class="trading-guide__intro">
           <span class="trading-guide__eyebrow">Kısaca ne işe yarar?</span>
-          <h3 class="card__heading" id="trading-guide-title">Emisyon kotası fazlasının finansal değerini yönetir</h3>
-          <p>Kurum, kota limitinin altında kaldığında oluşan kullanılabilir hakkı satabilir. EcoByte; güvenli rezervi ve açık emirleri ayırır, satılabilecek miktarı hesaplar ve seçtiğiniz fiyata göre beklenen geliri gösterir.</p>
-          <p class="trading-guide__note"><strong>Not:</strong> Bu sürümde emirler dış bir borsaya otomatik iletilmez; kurum içi takip ve finansal önizleme amacıyla kaydedilir.</p>
+          <h3 class="card__heading" id="trading-guide-title">Emisyon kotasının finansal değerini yönetir</h3>
+          <p>EcoByte, kurumsal kota ile resmî satılabilir ETS tahsisini ayrı hesaplar. Kota altında kalmak tek başına satılabilir hak oluşturmaz; satış kapasitesi yalnızca belgelenmiş tahsisten doğar.</p>
+          <p class="trading-guide__note"><strong>Durum:</strong> ${escapeHtml(summary.etsStatus)} Bu sürümde emirler dış bir borsaya otomatik iletilmez.</p>
         </div>
         <ol class="trading-steps" aria-label="Emisyon ticareti adımları">
-          <li><span>1</span><div><strong>Fazla kotayı belirle</strong><small>Emisyon sonrası elde kalan hakkı görün.</small></div></li>
-          <li><span>2</span><div><strong>Rezervi koru</strong><small>Olası artışlar için %8 güvenli pay ayrılır.</small></div></li>
-          <li><span>3</span><div><strong>Satış emri oluştur</strong><small>Miktar ve fiyatla beklenen geliri hesaplayın.</small></div></li>
+          <li><span>1</span><div><strong>Kota durumunu izle</strong><small>Kota kullanımı ve aşımı görün.</small></div></li>
+          <li><span>2</span><div><strong>ETS tahsisini doğrula</strong><small>Belgelenmiş satılabilir hakkı kontrol edin.</small></div></li>
+          <li><span>3</span><div><strong>Satış emri oluştur</strong><small>Uygun kapasite varsa miktar ve fiyat belirleyin.</small></div></li>
         </ol>
       </section>
 
       <div class="summary-grid summary-grid--4">
-        <div class="summary-card summary-card--accent"><p class="summary-card__label">Kalan kota</p><p class="summary-card__value">${formatNumber(summary.sellableSurplus)} <span class="summary-card__unit">tCO2e</span></p></div>
+        <div class="summary-card summary-card--accent"><p class="summary-card__label">Satılabilir kota</p><p class="summary-card__value">${formatNumber(summary.sellableSurplus)} <span class="summary-card__unit">tCO2e</span></p></div>
         <div class="summary-card"><p class="summary-card__label">Güvenli rezerv</p><p class="summary-card__value">${formatNumber(reserve)} <span class="summary-card__unit">tCO2e</span></p></div>
         <div class="summary-card"><p class="summary-card__label">Satışa uygun kapasite</p><p class="summary-card__value"><span id="trading-available-capacity">${formatNumber(tradable)}</span> <span class="summary-card__unit">tCO2e</span></p></div>
         <div class="summary-card"><p class="summary-card__label">Referans piyasa fiyatı</p><p class="summary-card__value">${summary.marketPrice.toFixed(2)} <span class="summary-card__unit">€/tCO2e</span></p></div>
@@ -79,7 +79,7 @@ export function renderTradingPage(data) {
             <dl class="data-list trade-preview">
               <div class="data-list__row"><dt>Beklenen gelir</dt><dd class="text-accent" id="trade-revenue">${formatEuro(defaultAmount * defaultPrice)}</dd></div>
               <div class="data-list__row"><dt>Emir sonrası satış kapasitesi</dt><dd id="trade-reserve">${formatNumber(tradable - defaultAmount)} tCO2e</dd></div>
-              <div class="data-list__row"><dt>Kontrol sonucu</dt><dd id="trade-status" class="${canCreateOrder ? 'text-accent' : 'text-danger'}" aria-live="polite">${canCreateOrder ? 'Uygun' : 'Satışa uygun kapasite yok'}</dd></div>
+              <div class="data-list__row"><dt>Kontrol sonucu</dt><dd id="trade-status" class="${canCreateOrder ? 'text-accent' : 'text-danger'}" aria-live="polite">${canCreateOrder ? 'Uygun' : 'Resmî satılabilir tahsis yok'}</dd></div>
             </dl>
             <div class="trade-actions">
               <p>Emir kaydedildiğinde miktar, açık emirler için ayrılır.</p>

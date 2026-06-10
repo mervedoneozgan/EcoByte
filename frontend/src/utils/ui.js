@@ -4,6 +4,12 @@ import { escapeHtml } from './text.js';
 
 let modalRoot = null;
 
+export function bindModalCloseActions(root, onClose = closeModal) {
+  root.addEventListener('click', (event) => {
+    if (event.target.closest?.('[data-modal-close]')) onClose();
+  });
+}
+
 function ensureModalRoot() {
   if (!modalRoot) {
     modalRoot = document.createElement('div');
@@ -16,9 +22,7 @@ function ensureModalRoot() {
         <div class="modal__body"></div>
       </div>`;
     document.body.appendChild(modalRoot);
-    modalRoot.querySelectorAll('[data-modal-close]').forEach((el) => {
-      el.addEventListener('click', closeModal);
-    });
+    bindModalCloseActions(modalRoot);
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeModal();
     });
