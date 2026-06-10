@@ -77,26 +77,24 @@ test('renders 2024 and 2025 controls for annual emission distribution', () => {
   assert.match(html, /2025 yıllık brüt emisyon/);
 });
 
-test('renders yearly quota controls without showing a false overage', () => {
+test('renders yearly quota controls with distinct baseline and target quotas', () => {
   const html = renderQuotaGauge({
-    quotaYear: 2026,
-    quotaStatus: 'Yıllık ölçüm bekleniyor',
-    quotaLimit: 2052.333,
+    quotaYear: 2024,
+    quotaStatus: 'Kota aşılmadı',
+    quotaLimit: 1397.003,
     quotaEmission: null,
     quotaMeasurementAvailable: false,
-    usedPercent: null,
+    usedPercent: 100,
     annualQuotas: [
-      { year: 2024, actualEmission: 1397.003, hasActual: true, hasQuota: false, usedPercent: null, status: 'Kota tanımlı değil' },
-      { year: 2025, actualEmission: 2160.351, hasActual: true, hasQuota: false, usedPercent: null, status: 'Kota tanımlı değil' },
-      { year: 2026, actualEmission: null, quotaLimit: 2052.333, hasActual: false, hasQuota: true, usedPercent: null, status: 'Yıllık ölçüm bekleniyor' },
+      { year: 2024, actualEmission: 1397.003, quotaLimit: 1397.003, hasActual: true, hasQuota: true, usedPercent: 100, status: 'Kota aşılmadı' },
+      { year: 2025, actualEmission: 2160.351, quotaLimit: 1327.153, hasActual: true, hasQuota: true, usedPercent: 162.8, status: 'Kota aşıldı' },
     ],
   });
 
   assert.match(html, /data-quota-year="2024"/);
   assert.match(html, /data-quota-year="2025"/);
-  assert.match(html, /data-quota-year="2026"/);
-  assert.match(html, /Yıllık ölçüm bekleniyor/);
-  assert.doesNotMatch(html, /Kota aşıldı/);
+  assert.match(html, /100%/);
+  assert.doesNotMatch(html, /Kota tanımlı değil/);
 });
 
 test('renders a dashboard action that opens emission trading', () => {
@@ -112,24 +110,24 @@ test('renders a dashboard action that opens emission trading', () => {
 test('renders yearly quota management with 2024 and 2025 quotas', () => {
   const annualQuotas = [
     {
-      year: 2024, actualEmission: 1397.003, quotaLimit: 1327.153, baselineYear: 2024,
-      hasQuota: true, hasActual: true, usedPercent: 105.3, remaining: 0, overage: 69.85,
-      quotaExceeded: true, status: 'Kota aşıldı',
+      year: 2024, actualEmission: 1397.003, quotaLimit: 1397.003, baselineYear: 2024,
+      hasQuota: true, hasActual: true, usedPercent: 100, remaining: 0, overage: 0,
+      quotaExceeded: false, status: 'Kota aşılmadı',
     },
     {
-      year: 2025, actualEmission: 2160.351, quotaLimit: 2052.333, baselineYear: 2025,
-      hasQuota: true, hasActual: true, usedPercent: 105.3, remaining: 0, overage: 108.018,
+      year: 2025, actualEmission: 2160.351, quotaLimit: 1327.153, baselineYear: 2024,
+      hasQuota: true, hasActual: true, usedPercent: 162.8, remaining: 0, overage: 833.198,
       quotaExceeded: true, status: 'Kota aşıldı',
     },
   ];
   const html = renderQuotaPage({
     summary: {
-      quotaLimit: 2052.333,
+      quotaLimit: 1327.153,
       quotaEmission: null,
       quotaYear: 2025,
-      quotaBaselineYear: 2025,
-      quotaBaselineEmission: 2160.351,
-      quotaReductionTarget: 108.018,
+      quotaBaselineYear: 2024,
+      quotaBaselineEmission: 1397.003,
+      quotaReductionTarget: 69.85,
       quotaReductionPercent: 5,
       quotaScope: 'Kapsam 1 + Kapsam 2',
       quotaStatus: 'Yıllık ölçüm bekleniyor',
@@ -146,25 +144,24 @@ test('renders yearly quota management with 2024 and 2025 quotas', () => {
     annualQuotas,
     plans: [],
     methodology: {
-      title: '2024-2025 Kurumsal Emisyon Kotaları',
-      legalNature: 'EcoByte içinde kullanılan kurumsal kotadır.',
-      calculation: '2024 için 1.397,003 × 0,95 = 1.327,153 tCO2e; 2025 için 2.160,351 × 0,95 = 2.052,333 tCO2e.',
-      regulatoryNotes: ['2024 ve 2025 için kurumsal azaltım hedefleri tanımlıdır.'],
+      title: '2024 Baz Yılı ve 2025 Hedef Kotası',
+      legalNature: 'EcoByte içinde kullanılan kurumsal kota planıdır.',
+      calculation: '2024 baz yılı 1.397,003 tCO2e olarak alındı; 2025 hedef kotası 1.397,003 × 0,95 = 1.327,153 tCO2e olarak hesaplandı.',
+      regulatoryNotes: ['2024 baz yıl, 2025 ise hedef yıl olarak tanımlandı.'],
       exclusions: ['Dönemi belirsiz yakıt dahil değildir.'],
       sources: [{ label: 'Resmî kaynak', url: 'https://example.com' }],
     },
   });
 
   assert.match(html, /Kota Yönetimi/);
-  assert.match(html, /2024-2025 Kurumsal Emisyon Kotaları/);
+  assert.match(html, /2024 Baz Yılı ve 2025 Hedef Kotası/);
   assert.match(html, /2025 kota limiti/);
-  assert.match(html, /2\.052,333/);
   assert.match(html, /1\.327,153/);
+  assert.match(html, /162\.8%/);
   assert.match(html, /Kota aşıldı/);
   assert.match(html, /Yıllık kota karşılaştırması/);
   assert.match(html, /data-quota-page-year="2024"/);
   assert.match(html, /data-quota-page-year="2025"/);
-  assert.doesNotMatch(html, /data-quota-page-year="2026"/);
   assert.match(html, /Satılabilir kota/);
   assert.match(html, /50\.000/);
 });

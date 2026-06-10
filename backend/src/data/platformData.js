@@ -94,8 +94,8 @@ function buildAnnualQuota({
 export const annualDistributions = emissionInventory.annual.map(buildAnnualDistribution);
 const latestAnnual = emissionInventory.summary.latestYear;
 const annual2024 = emissionInventory.annual.find((record) => record.year === 2024) ?? emissionInventory.annual[0];
-const quotaLimit2024 = round(annual2024.grossEnergyEmission * 0.95, 3);
-const quotaLimit2025 = round(latestAnnual.grossEnergyEmission * 0.95, 3);
+const quotaLimit2024 = round(annual2024.grossEnergyEmission, 3);
+const quotaLimit2025 = round(annual2024.grossEnergyEmission * 0.95, 3);
 const annualQuotaEntries = [
   buildAnnualQuota({
     year: annual2024.year,
@@ -119,10 +119,10 @@ export const annualQuotas = [
 const calculated = calculateDashboardFromEnergy(energyRecords, {
   quotaLimit: quotaLimit2025,
   quotaYear: latestAnnual.year,
-  quotaBaselineYear: latestAnnual.year,
-  quotaBaselineEmission: latestAnnual.grossEnergyEmission,
+  quotaBaselineYear: annual2024.year,
+  quotaBaselineEmission: annual2024.grossEnergyEmission,
   quotaScope: 'Kapsam 1 + Kapsam 2 (elektrik ve doğal gaz)',
-  quotaNote: '2024 ve 2025 ölçülmüş Scope 1+2 baz yıllarına göre tam %5 azaltım hedefiyle hesaplanan kurumsal emisyon kotalarıdır.',
+  quotaNote: '2024 baz yılına göre 2025 hedef yılı için tam %5 azaltım hedefiyle hesaplanan kurumsal emisyon kotalarıdır.',
   reportingYear: latestAnnual.year,
   etsEligible: false,
   etsStatus: 'Üniversitelere özel resmî ETS tahsisi belgelenmedi; kurumsal kotalar yalnızca EcoByte içi azaltım izleme için kullanılır.',
