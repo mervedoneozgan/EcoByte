@@ -10,10 +10,11 @@ function isCollapsed() {
 export function renderSidebar(company, activeRoute = 'dashboard') {
   const collapsed = isCollapsed();
   const user = getStoredUser();
+  const activeLabel = menuItems.find((item) => item.id === activeRoute)?.label || 'EcoByte';
   const menuHtml = menuItems
     .map(
       ({ id, label }) => `
-    <button type="button" class="nav-item ${id === activeRoute ? 'nav-item--active' : ''}" data-route="${id}" title="${label}">
+    <button type="button" class="nav-item ${id === activeRoute ? 'nav-item--active' : ''}" data-route="${id}" title="${label}" ${id === activeRoute ? 'aria-current="page"' : ''}>
       <span class="nav-dot"></span>
       <span class="nav-label">${label}</span>
     </button>`
@@ -21,6 +22,16 @@ export function renderSidebar(company, activeRoute = 'dashboard') {
     .join('');
 
   return `
+    <header class="mobile-topbar">
+      <button type="button" class="mobile-topbar__menu" id="mobile-menu-toggle" aria-controls="sidebar" aria-expanded="false" aria-label="Menüyü aç">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 7h16M4 12h16M4 17h16"></path>
+        </svg>
+      </button>
+      ${renderLogoImg('mobile-topbar__logo')}
+      <span class="mobile-topbar__route">${escapeHtml(activeLabel)}</span>
+    </header>
+    <button type="button" class="sidebar-backdrop" id="sidebar-backdrop" aria-label="Menüyü kapat" tabindex="-1"></button>
     <aside class="sidebar ${collapsed ? 'sidebar--collapsed' : ''}" id="sidebar">
       <button type="button" class="sidebar__toggle" id="sidebar-toggle" aria-controls="sidebar-navigation" aria-expanded="${!collapsed}" aria-label="${collapsed ? 'Menüyü aç' : 'Menüyü daralt'}" title="${collapsed ? 'Menüyü aç' : 'Menüyü daralt'}">
         <svg class="sidebar__toggle-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -62,27 +73,82 @@ export function renderSidebar(company, activeRoute = 'dashboard') {
 }
 
 export function bindSidebarNavigation(onNavigate) {
+  const sidebar = document.getElementById('sidebar');
+  const mobileToggle = document.getElementById('mobile-menu-toggle');
+  const sidebarToggle = document.getElementById('sidebar-toggle');
+  const backdrop = document.getElementById('sidebar-backdrop');
+  const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
+  const setMobileMenu = (open) => {
+    const mobileOpen = isMobile() && open;
+    sidebar?.classList.toggle('sidebar--mobile-open', mobileOpen);
+    if (sidebar) sidebar.inert = isMobile() && !mobileOpen;
+    backdrop?.classList.toggle('sidebar-backdrop--open', mobileOpen);
+    document.body.classList.toggle('mobile-nav-open', mobileOpen);
+    mobileToggle?.setAttribute('aria-expanded', String(mobileOpen));
+    mobileToggle?.setAttribute('aria-label', mobileOpen ? 'Menüyü kapat' : 'Menüyü aç');
+    if (isMobile()) {
+      sidebarToggle?.setAttribute('aria-label', 'Menüyü kapat');
+      sidebarToggle?.setAttribute('title', 'Menüyü kapat');
+    } else {
+      const desktopLabel = sidebar?.classList.contains('sidebar--collapsed') ? 'Menüyü aç' : 'Menüyü daralt';
+      sidebarToggle?.setAttribute('aria-label', desktopLabel);
+      sidebarToggle?.setAttribute('title', desktopLabel);
+    }
+  };
+
   document.querySelectorAll('[data-route]').forEach((btn) => {
     btn.addEventListener('click', () => {
+      setMobileMenu(false);
       onNavigate(btn.dataset.route);
     });
   });
 
+  mobileToggle?.addEventListener('click', () => {
+    const open = !sidebar?.classList.contains('sidebar--mobile-open');
+    setMobileMenu(open);
+    if (open) setTimeout(() => sidebar?.querySelector('[aria-current="page"]')?.focus(), 250);
+  });
+  backdrop?.addEventListener('click', () => {
+    setMobileMenu(false);
+    mobileToggle?.focus();
+  });
+
   document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
-    const sidebar = document.getElementById('sidebar');
-    const toggle = document.getElementById('sidebar-toggle');
+    if (isMobile()) {
+      setMobileMenu(false);
+      mobileToggle?.focus();
+      return;
+    }
     const nextCollapsed = !sidebar?.classList.contains('sidebar--collapsed');
     const label = nextCollapsed ? 'Menüyü aç' : 'Menüyü daralt';
     sidebar?.classList.toggle('sidebar--collapsed', nextCollapsed);
     document.body.classList.toggle('sidebar-collapsed', nextCollapsed);
-    toggle?.setAttribute('aria-expanded', String(!nextCollapsed));
-    toggle?.setAttribute('aria-label', label);
-    toggle?.setAttribute('title', label);
+    sidebarToggle?.setAttribute('aria-expanded', String(!nextCollapsed));
+    sidebarToggle?.setAttribute('aria-label', label);
+    sidebarToggle?.setAttribute('title', label);
     localStorage.setItem('ecobyte-sidebar', nextCollapsed ? 'collapsed' : 'expanded');
   });
   document.getElementById('sidebar-logout')?.addEventListener('click', () => {
+    setMobileMenu(false);
     window.dispatchEvent(new CustomEvent('ecobyte:logout-request'));
   });
+  if (window.ecobyteMobileMenuKeyHandler) {
+    document.removeEventListener('keydown', window.ecobyteMobileMenuKeyHandler);
+  }
+  window.ecobyteMobileMenuKeyHandler = (event) => {
+    if (event.key === 'Escape' && sidebar?.classList.contains('sidebar--mobile-open')) {
+      setMobileMenu(false);
+      mobileToggle?.focus();
+    }
+  };
+  document.addEventListener('keydown', window.ecobyteMobileMenuKeyHandler);
 
+  if (window.ecobyteMobileMenuResizeHandler) {
+    window.removeEventListener('resize', window.ecobyteMobileMenuResizeHandler);
+  }
+  window.ecobyteMobileMenuResizeHandler = () => setMobileMenu(false);
+  window.addEventListener('resize', window.ecobyteMobileMenuResizeHandler);
+
+  setMobileMenu(false);
   document.body.classList.toggle('sidebar-collapsed', isCollapsed());
 }
