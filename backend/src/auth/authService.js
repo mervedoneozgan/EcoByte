@@ -52,6 +52,7 @@ function createInitialUsers() {
 }
 
 function persistUsers(usersToPersist) {
+  if (process.env.VERCEL) return;
   mkdirSync(dirname(USER_STORE_PATH), { recursive: true });
   const temporaryPath = `${USER_STORE_PATH}.tmp`;
   writeFileSync(temporaryPath, JSON.stringify(usersToPersist, null, 2), { encoding: 'utf8', mode: 0o600 });
@@ -59,6 +60,7 @@ function persistUsers(usersToPersist) {
 }
 
 function persistSessions() {
+  if (process.env.VERCEL) return;
   mkdirSync(dirname(SESSION_STORE_PATH), { recursive: true });
   const temporaryPath = `${SESSION_STORE_PATH}.tmp`;
   writeFileSync(temporaryPath, JSON.stringify([...sessions.entries()], null, 2), {
@@ -69,6 +71,7 @@ function persistSessions() {
 }
 
 function loadSessions() {
+  if (process.env.VERCEL) return;
   if (!existsSync(SESSION_STORE_PATH)) return;
   const storedSessions = JSON.parse(readFileSync(SESSION_STORE_PATH, 'utf8'));
   if (!Array.isArray(storedSessions)) return;
@@ -79,6 +82,7 @@ function loadSessions() {
 }
 
 function loadUsers() {
+  if (process.env.VERCEL) return createInitialUsers();
   if (existsSync(USER_STORE_PATH)) {
     const storedUsers = JSON.parse(readFileSync(USER_STORE_PATH, 'utf8'));
     if (Array.isArray(storedUsers) && storedUsers.length) return storedUsers;

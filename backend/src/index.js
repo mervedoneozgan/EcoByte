@@ -21,11 +21,17 @@ const PORT = process.env.PORT || 5002;
 
 app.disable('x-powered-by');
 
-const allowedOrigins = (
+const configuredOrigins =
   process.env.CORS_ORIGIN
-  || 'http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173,http://127.0.0.1:5174'
-)
-  .split(',')
+  || 'http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173,http://127.0.0.1:5174';
+const vercelOrigins = [
+  process.env.VERCEL_URL,
+  process.env.VERCEL_PROJECT_PRODUCTION_URL,
+  process.env.VERCEL_BRANCH_URL,
+]
+  .filter(Boolean)
+  .map((host) => `https://${host}`);
+const allowedOrigins = [...configuredOrigins.split(','), ...vercelOrigins]
   .map((origin) => origin.trim().replace(/\/$/, ''));
 
 app.use(
