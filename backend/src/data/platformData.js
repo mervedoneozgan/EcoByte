@@ -94,22 +94,22 @@ function buildAnnualQuota({
 export const annualDistributions = emissionInventory.annual.map(buildAnnualDistribution);
 const latestAnnual = emissionInventory.summary.latestYear;
 const annual2024 = emissionInventory.annual.find((record) => record.year === 2024) ?? emissionInventory.annual[0];
-const quotaLimit2024 = round(annual2024.grossEnergyEmission, 3);
-const quotaLimit2025 = round(annual2024.grossEnergyEmission * 0.95, 3);
+const quotaLimit2024 = 5000;
+const quotaLimit2025 = 5000;
 const annualQuotaEntries = [
   buildAnnualQuota({
     year: annual2024.year,
     actualEmission: annual2024.grossEnergyEmission,
     quotaLimit: quotaLimit2024,
     baselineYear: annual2024.year,
-    baselineEmission: annual2024.grossEnergyEmission,
+    baselineEmission: quotaLimit2024,
   }),
   buildAnnualQuota({
     year: latestAnnual.year,
     actualEmission: latestAnnual.grossEnergyEmission,
     quotaLimit: quotaLimit2025,
     baselineYear: latestAnnual.year,
-    baselineEmission: latestAnnual.grossEnergyEmission,
+    baselineEmission: quotaLimit2025,
   }),
 ];
 export const annualQuotas = [
@@ -120,9 +120,9 @@ const calculated = calculateDashboardFromEnergy(energyRecords, {
   quotaLimit: quotaLimit2025,
   quotaYear: latestAnnual.year,
   quotaBaselineYear: annual2024.year,
-  quotaBaselineEmission: annual2024.grossEnergyEmission,
+  quotaBaselineEmission: quotaLimit2025,
   quotaScope: 'Kapsam 1 + Kapsam 2 (elektrik ve doğal gaz)',
-  quotaNote: '2024 baz yılına göre 2025 hedef yılı için tam %5 azaltım hedefiyle hesaplanan kurumsal emisyon kotalarıdır.',
+  quotaNote: '2024 ve 2025 için kurumsal kota limiti 5.000 tCO2e olarak sabitlenmiştir.',
   reportingYear: latestAnnual.year,
   etsEligible: false,
   etsStatus: 'Üniversitelere özel resmî ETS tahsisi belgelenmedi; kurumsal kotalar yalnızca EcoByte içi azaltım izleme için kullanılır.',

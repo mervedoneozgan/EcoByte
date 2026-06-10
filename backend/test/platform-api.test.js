@@ -441,24 +441,23 @@ test('explains why Turkish sell orders are rejected without an ETS allocation', 
 test('exposes the documented and exactly calculated 2024-2025 emission quotas', async () => {
   const quota = await request('/quota');
 
-  assert.equal(quota.summary.quotaLimit, 1327.153);
-  assert.equal(quota.summary.quotaBaselineEmission, 1397.003);
-  assert.equal(quota.summary.quotaLimit, Number((quota.summary.quotaBaselineEmission * 0.95).toFixed(3)));
-  assert.equal(quota.summary.quotaReductionTarget, 69.85);
-  assert.equal(quota.summary.quotaReductionPercent, 5);
+  assert.equal(quota.summary.quotaLimit, 5000);
+  assert.equal(quota.summary.quotaBaselineEmission, 5000);
+  assert.equal(quota.summary.quotaReductionTarget, 0);
+  assert.equal(quota.summary.quotaReductionPercent, 0);
   assert.equal(quota.summary.quotaEmission, null);
   assert.equal(quota.summary.quotaMeasurementAvailable, false);
   assert.equal(quota.summary.quotaStatus, 'Yıllık ölçüm bekleniyor');
   assert.equal(quota.summary.quotaExceeded, false);
   assert.equal(quota.summary.sellableSurplus, 0);
   assert.deepEqual(quota.annualQuotas.map((item) => item.year), [2024, 2025]);
-  assert.equal(quota.annualQuotas.find((item) => item.year === 2024).quotaLimit, 1397.003);
-  assert.equal(quota.annualQuotas.find((item) => item.year === 2024).usedPercent, 100);
+  assert.equal(quota.annualQuotas.find((item) => item.year === 2024).quotaLimit, 5000);
+  assert.equal(quota.annualQuotas.find((item) => item.year === 2024).usedPercent, 27.9);
   assert.equal(quota.annualQuotas.find((item) => item.year === 2024).quotaExceeded, false);
-  assert.equal(quota.annualQuotas.find((item) => item.year === 2025).quotaLimit, 1327.153);
-  assert.equal(quota.annualQuotas.find((item) => item.year === 2025).usedPercent, 162.8);
-  assert.equal(quota.annualQuotas.find((item) => item.year === 2025).quotaExceeded, true);
-  assert.match(quota.methodology.title, /2024 Baz Yılı/);
+  assert.equal(quota.annualQuotas.find((item) => item.year === 2025).quotaLimit, 5000);
+  assert.equal(quota.annualQuotas.find((item) => item.year === 2025).usedPercent, 43.2);
+  assert.equal(quota.annualQuotas.find((item) => item.year === 2025).quotaExceeded, false);
+  assert.match(quota.methodology.title, /5\.000 tCO2e/);
   assert.ok(quota.methodology.sources.length >= 3);
 });
 

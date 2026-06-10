@@ -13,15 +13,15 @@ router.get('/', (_req, res) => res.json({
   annualQuotas,
   plans: quotaPlans,
   methodology: {
-    title: '2024 Baz Yılı ve 2025 Hedef Kotası',
-    legalNature: 'EcoByte içinde azaltım performansını yönetmek için kullanılan kurumsal kota planıdır; resmî ETS tahsisi değildir.',
-    calculation: '2024 baz yılı 1.397,003 tCO2e olarak alındı; 2025 hedef kotası 1.397,003 × 0,95 = 1.327,153 tCO2e olarak hesaplandı.',
+    title: '5.000 tCO2e Kurumsal Emisyon Kotası',
+    legalNature: 'EcoByte içinde azaltım performansını yönetmek için kullanılan kurumsal kotadır; resmî ETS tahsisi değildir.',
+    calculation: '2024 ve 2025 için kota limiti 5.000 tCO2e olarak sabitlendi.',
     exclusions: [
       'Dönemi doğrulanmamış yakıt emisyonları kota kullanımına dahil edilmez.',
       'GES kaynaklı kaçınılan emisyon pozitif etki olarak ayrı izlenir; brüt emisyonlardan düşülmez.',
     ],
     regulatoryNotes: [
-      '2024 baz yıl, 2025 ise hedef yıl olarak tanımlandı; bunlar resmî ETS tahsisi değildir.',
+      '2024 ve 2025 için kota limiti 5.000 tCO2e olarak tanımlandı; bunlar resmî ETS tahsisi değildir.',
       '50.000 tCO2e değeri kuruma verilecek kota değil, ETS kapsam değerlendirmesinde kullanılan bir eşiktir.',
       'Gerçek bir ETS tahsisi belgelenene kadar kalan kota satılabilir karbon hakkı olarak değerlendirilemez.',
     ],

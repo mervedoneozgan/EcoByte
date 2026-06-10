@@ -81,19 +81,19 @@ test('renders yearly quota controls with distinct baseline and target quotas', (
   const html = renderQuotaGauge({
     quotaYear: 2024,
     quotaStatus: 'Kota aşılmadı',
-    quotaLimit: 1397.003,
+    quotaLimit: 5000,
     quotaEmission: null,
     quotaMeasurementAvailable: false,
-    usedPercent: 100,
+    usedPercent: 27.9,
     annualQuotas: [
-      { year: 2024, actualEmission: 1397.003, quotaLimit: 1397.003, hasActual: true, hasQuota: true, usedPercent: 100, status: 'Kota aşılmadı' },
-      { year: 2025, actualEmission: 2160.351, quotaLimit: 1327.153, hasActual: true, hasQuota: true, usedPercent: 162.8, status: 'Kota aşıldı' },
+      { year: 2024, actualEmission: 1397.003, quotaLimit: 5000, hasActual: true, hasQuota: true, usedPercent: 27.9, status: 'Kota aşılmadı' },
+      { year: 2025, actualEmission: 2160.351, quotaLimit: 5000, hasActual: true, hasQuota: true, usedPercent: 43.2, status: 'Kota aşılmadı' },
     ],
   });
 
   assert.match(html, /data-quota-year="2024"/);
   assert.match(html, /data-quota-year="2025"/);
-  assert.match(html, /100%/);
+  assert.match(html, /27\.9%/);
   assert.doesNotMatch(html, /Kota tanımlı değil/);
 });
 
@@ -110,25 +110,25 @@ test('renders a dashboard action that opens emission trading', () => {
 test('renders yearly quota management with 2024 and 2025 quotas', () => {
   const annualQuotas = [
     {
-      year: 2024, actualEmission: 1397.003, quotaLimit: 1397.003, baselineYear: 2024,
-      hasQuota: true, hasActual: true, usedPercent: 100, remaining: 0, overage: 0,
+      year: 2024, actualEmission: 1397.003, quotaLimit: 5000, baselineYear: 2024,
+      hasQuota: true, hasActual: true, usedPercent: 27.9, remaining: 0, overage: 0,
       quotaExceeded: false, status: 'Kota aşılmadı',
     },
     {
-      year: 2025, actualEmission: 2160.351, quotaLimit: 1327.153, baselineYear: 2024,
-      hasQuota: true, hasActual: true, usedPercent: 162.8, remaining: 0, overage: 833.198,
-      quotaExceeded: true, status: 'Kota aşıldı',
+      year: 2025, actualEmission: 2160.351, quotaLimit: 5000, baselineYear: 2025,
+      hasQuota: true, hasActual: true, usedPercent: 43.2, remaining: 0, overage: 0,
+      quotaExceeded: false, status: 'Kota aşılmadı',
     },
   ];
   const html = renderQuotaPage({
     summary: {
-      quotaLimit: 1327.153,
+      quotaLimit: 5000,
       quotaEmission: null,
       quotaYear: 2025,
-      quotaBaselineYear: 2024,
-      quotaBaselineEmission: 1397.003,
-      quotaReductionTarget: 69.85,
-      quotaReductionPercent: 5,
+      quotaBaselineYear: 2025,
+      quotaBaselineEmission: 5000,
+      quotaReductionTarget: 0,
+      quotaReductionPercent: 0,
       quotaScope: 'Kapsam 1 + Kapsam 2',
       quotaStatus: 'Yıllık ölçüm bekleniyor',
       etsStatus: 'Resmî ETS tahsisi bulunmuyor.',
@@ -144,21 +144,21 @@ test('renders yearly quota management with 2024 and 2025 quotas', () => {
     annualQuotas,
     plans: [],
     methodology: {
-      title: '2024 Baz Yılı ve 2025 Hedef Kotası',
-      legalNature: 'EcoByte içinde kullanılan kurumsal kota planıdır.',
-      calculation: '2024 baz yılı 1.397,003 tCO2e olarak alındı; 2025 hedef kotası 1.397,003 × 0,95 = 1.327,153 tCO2e olarak hesaplandı.',
-      regulatoryNotes: ['2024 baz yıl, 2025 ise hedef yıl olarak tanımlandı.'],
+      title: '5.000 tCO2e Kurumsal Emisyon Kotası',
+      legalNature: 'EcoByte içinde kullanılan kurumsal kotadır.',
+      calculation: '2024 ve 2025 için kota limiti 5.000 tCO2e olarak sabitlendi.',
+      regulatoryNotes: ['2024 ve 2025 için kota limiti 5.000 tCO2e olarak tanımlandı.'],
       exclusions: ['Dönemi belirsiz yakıt dahil değildir.'],
       sources: [{ label: 'Resmî kaynak', url: 'https://example.com' }],
     },
   });
 
   assert.match(html, /Kota Yönetimi/);
-  assert.match(html, /2024 Baz Yılı ve 2025 Hedef Kotası/);
+  assert.match(html, /5\.000 tCO2e Kurumsal Emisyon Kotası/);
   assert.match(html, /2025 kota limiti/);
-  assert.match(html, /1\.327,153/);
-  assert.match(html, /162\.8%/);
-  assert.match(html, /Kota aşıldı/);
+  assert.match(html, /5\.000 tCO2e/);
+  assert.match(html, /43\.2%/);
+  assert.match(html, /Kota aşılmadı/);
   assert.match(html, /Yıllık kota karşılaştırması/);
   assert.match(html, /data-quota-page-year="2024"/);
   assert.match(html, /data-quota-page-year="2025"/);
