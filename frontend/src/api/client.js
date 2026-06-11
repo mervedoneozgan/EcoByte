@@ -77,6 +77,8 @@ export const api = {
   createTradingOrder: (payload) =>
     requestJson('/trading/orders', { method: 'POST', body: JSON.stringify(payload) }),
   getScenarioData: () => requestJson('/scenarios'),
+  calculateScenario: (payload) =>
+    requestJson('/scenarios/calculate', { method: 'POST', body: JSON.stringify(payload) }),
   saveScenarioAnalysis: (payload) =>
     requestJson('/scenarios/exports', { method: 'POST', body: JSON.stringify(payload) }),
   createConsultancyRequest: (payload) =>

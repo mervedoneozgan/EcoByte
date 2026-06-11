@@ -9,10 +9,17 @@ import {
   renderTrendChart,
 } from '../src/render/charts.js';
 import { renderTradingCard } from '../src/render/trading.js';
+import { renderFinancialScenarios } from '../src/render/scenarios.js';
 import { renderLoginPage } from '../src/pages/login.js';
 import { renderSettingsPage } from '../src/pages/settings.js';
 import { renderConsultancyPage } from '../src/pages/consultancy.js';
 import { renderQuotaPage } from '../src/pages/quota.js';
+import { renderAiAnalysisPage } from '../src/pages/aiAnalysis.js';
+import {
+  calculateScenarioLocally,
+  renderFinancialScenariosPage,
+} from '../src/pages/financialScenarios.js';
+import { renderTradingPage } from '../src/pages/trading.js';
 import { bindModalCloseActions } from '../src/utils/ui.js';
 
 test('escapes user-controlled values before HTML rendering', () => {
@@ -65,7 +72,7 @@ test('renders all solar facility selectors', () => {
   assert.match(html, /Kaçınılan karbon emisyonu/);
 });
 
-test('renders 2024 and 2025 controls for annual emission distribution', () => {
+test('renders year controls without assigning unknown-period fuel to the selected year', () => {
   const years = [
     { year: 2024, total: 1397.003, scope: 'Kapsam 1 + Kapsam 2', note: 'Yıllık', items: [] },
     { year: 2025, total: 2160.351, scope: 'Kapsam 1 + Kapsam 2', note: 'Yıllık', items: [] },
@@ -74,7 +81,9 @@ test('renders 2024 and 2025 controls for annual emission distribution', () => {
 
   assert.match(html, /data-distribution-year="2024"/);
   assert.match(html, /data-distribution-year="2025"/);
-  assert.match(html, /2025 yıllık brüt emisyon/);
+  assert.match(html, /2025 enerji emisyonu \+ dönem atanmamış yakıt/);
+  assert.match(html, /Görünüm toplamı/);
+  assert.doesNotMatch(html, /yıllık brüt emisyon/i);
 });
 
 test('renders yearly quota controls with distinct baseline and target quotas', () => {
@@ -94,30 +103,144 @@ test('renders yearly quota controls with distinct baseline and target quotas', (
   assert.match(html, /data-quota-year="2024"/);
   assert.match(html, /data-quota-year="2025"/);
   assert.match(html, /27\.9%/);
+  assert.match(html, /1\.397,003 tCO2e/);
   assert.doesNotMatch(html, /Kota tanımlı değil/);
+});
+
+test('renders graph observation values with their correct emission units', () => {
+  const html = renderAiAnalysisPage({
+    summary: {
+      annualEmission: 100,
+      avoidedEmission: 25,
+      latestPeriod: 'Mayıs 2026',
+      latestEmission: 10,
+      peakPeriod: 'Nisan 2026',
+      peakEmission: 12,
+    },
+    recommendations: [
+      { title: 'Brüt emisyon', description: 'Ölçüm', impactTco2e: 10, unit: 'tCO2e' },
+      { title: 'GES göstergesi', description: 'Ölçüm', impactTco2e: 5, unit: 'tCO2' },
+    ],
+  });
+
+  assert.match(html, />10 tCO2e</);
+  assert.match(html, />5 tCO2</);
+});
+
+test('calculates and renders an editable financial scenario', () => {
+  const context = {
+    year: 2025,
+    electricityEmission: 1166.761,
+    naturalGasEmission: 993.59,
+    actualEmission: 2160.351,
+    quotaLimit: 5000,
+    currentQuotaRemaining: 2839.649,
+    currentQuotaOverage: 0,
+    referenceCarbonPriceEur: 25.4,
+  };
+  const assumptions = {
+    electricityReductionPercent: 12,
+    naturalGasReductionPercent: 9,
+    investmentEur: 68000,
+    annualOperationalSavingsEur: 30000,
+    analysisYears: 5,
+    discountRatePercent: 10,
+    carbonPriceEur: 25.4,
+    includeCarbonValueInReturn: false,
+  };
+  const results = calculateScenarioLocally(context, assumptions);
+  const html = renderFinancialScenariosPage({
+    summary: { marketPrice: 25.4, quotaLimit: 5000 },
+    trend: [],
+    scenarios: [],
+    scenarioData: {
+      context,
+      presets: [{ id: 'balanced', label: 'Dengeli', assumptions }],
+      exports: [],
+    },
+  });
+
+  assert.equal(results.totalReduction, 229.434);
+  assert.equal(results.projectedQuotaRemaining, 3069.083);
+  assert.equal(results.roiPercent, 120.6);
+  assert.match(html, /Senaryo varsayımları/);
+  assert.match(html, /Sunucuda Doğrula/);
+  assert.match(html, /Net bugünkü değer/);
+  assert.match(html, /229,434 tCO2e/);
+  assert.match(html, /data-scenario-preset="balanced"/);
+});
+
+test('links the dashboard financial scenario summary to the calculator', () => {
+  const html = renderFinancialScenarios([
+    { type: 'conservative', label: 'Temkinli', value: 1000, trend: [1, 2] },
+    { type: 'balanced', label: 'Dengeli', value: 2000, trend: [2, 3] },
+    { type: 'ambitious', label: 'İddialı', value: 3000, trend: [3, 4] },
+  ]);
+
+  assert.match(html, /net bugünkü değerini gösterir/i);
+  assert.match(html, /data-open-scenarios/);
 });
 
 test('renders a dashboard action that opens emission trading', () => {
   const html = renderTradingCard({
-    sellableSurplus: 100,
+    sellableSurplus: 0,
     marketPrice: 25.4,
-    estimatedTradingProfit: 2540,
+    quotaYear: 2025,
+    annualQuotas: [
+      {
+        year: 2025,
+        hasActual: true,
+        quotaExceeded: false,
+        remaining: 2839.649,
+        referenceValueEur: 72127.08,
+      },
+    ],
   });
   assert.match(html, /data-open-trading/);
-  assert.match(html, /Satılabilir kota yalnızca belgelenmiş resmî ETS tahsisinden hesaplanır/);
+  assert.match(html, /Satılabilir kota adayı/);
+  assert.match(html, /2\.839,649 tCO2e/);
+  assert.match(html, /72\.127,08 €/);
+  assert.match(html, /emir verilebilir kapasite şu an 0'dır/);
+});
+
+test('shows the quota balance as a sellable candidate without enabling official sales', () => {
+  const html = renderTradingPage({
+    summary: {
+      quotaYear: 2025,
+      sellableSurplus: 0,
+      marketPrice: 25.4,
+      etsStatus: 'Resmî ETS tahsisi bulunmuyor.',
+    },
+    trading: {
+      quotaYear: 2025,
+      candidateSellableQuota: 2839.649,
+      candidateReferenceValueEur: 72127.08,
+      officialSellableQuota: 0,
+      safeReserve: 0,
+      availableCapacity: 0,
+      orders: [],
+      market: { updatedAt: '05.06.2026 12:00' },
+    },
+  });
+
+  assert.match(html, /2025 satılabilir kota adayı/);
+  assert.match(html, /2\.839,649/);
+  assert.match(html, /Resmî satılabilir ETS kotası/);
+  assert.match(html, /72\.127,08 €/);
+  assert.match(html, /id="btn-create-order" disabled/);
 });
 
 test('renders yearly quota management with 2024 and 2025 quotas', () => {
   const annualQuotas = [
     {
       year: 2024, actualEmission: 1397.003, quotaLimit: 5000, baselineYear: 2024,
-      hasQuota: true, hasActual: true, usedPercent: 27.9, remaining: 0, overage: 0,
-      quotaExceeded: false, status: 'Kota aşılmadı',
+      hasQuota: true, hasActual: true, usedPercent: 27.9, remaining: 3602.997, overage: 0,
+      quotaExceeded: false, status: 'Kota aşılmadı', referencePriceEur: 25.4, referenceValueEur: 91516.12,
     },
     {
       year: 2025, actualEmission: 2160.351, quotaLimit: 5000, baselineYear: 2025,
-      hasQuota: true, hasActual: true, usedPercent: 43.2, remaining: 0, overage: 0,
-      quotaExceeded: false, status: 'Kota aşılmadı',
+      hasQuota: true, hasActual: true, usedPercent: 43.2, remaining: 2839.649, overage: 0,
+      quotaExceeded: false, status: 'Kota aşılmadı', referencePriceEur: 25.4, referenceValueEur: 72127.08,
     },
   ];
   const html = renderQuotaPage({
@@ -162,8 +285,11 @@ test('renders yearly quota management with 2024 and 2025 quotas', () => {
   assert.match(html, /Yıllık kota karşılaştırması/);
   assert.match(html, /data-quota-page-year="2024"/);
   assert.match(html, /data-quota-page-year="2025"/);
-  assert.match(html, /Satılabilir kota/);
   assert.match(html, /50\.000/);
+  assert.match(html, /Kotaya göre finansal etki/);
+  assert.match(html, /2\.839,649 tCO2e kota altında/);
+  assert.match(html, /72\.127,08 €/);
+  assert.match(html, /satılabilir hak veya gerçekleşmiş gelir değildir/);
 });
 
 test('renders persisted settings preferences as editable controls', () => {

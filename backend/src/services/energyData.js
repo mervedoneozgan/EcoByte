@@ -602,7 +602,7 @@ const validationChecks = [
     key: 'factor-currency',
     label: 'Emisyon faktörlerinin güncelliği',
     status: 'verified',
-    detail: '05.06.2026 tarihinde kontrol edildi: ETKB tüketim faktörü 26.12.2025 tarihinde yayımlanan en güncel resmi değer; UK 2026 seti henüz yayımlanmadığından 2025 seti kullanılır.',
+    detail: '05.06.2026 tarihinde kontrol edildi: ETKB tüketim faktörü 26.12.2025 tarihinde yayımlanan en güncel resmî değer; UK 2026 seti henüz yayımlanmadığından 2025 seti kullanılır.',
   },
 ];
 
@@ -650,7 +650,7 @@ const dataCatalog = {
     rawRecordCount: datasets.reduce((sum, dataset) => sum + dataset.rowCount, 0),
     generatedAt: new Date().toISOString(),
     calculationPolicy:
-      'Brüt emisyonlar elektrik, doğalgaz ve dönem atanmamış yakıttan oluşur. GES pozitif etkisi brüt toplamdan düşülmeden ayrı gösterilir.',
+      'Seçili yılın elektrik ve doğalgaz emisyonları, dönemi bilinmeyen yakıt emisyonlarıyla birlikte gösterilir. Yakıt seçili yılın yıllık toplamına veya kota kullanımına dahil edilmez. GES pozitif etkisi ayrı raporlanır.',
   },
   validationChecks,
   formulas: EMISSION_FORMULAS,

@@ -8,11 +8,7 @@ export const trading = loadRuntimeSection('trading', {
     dailyChangePercent: 1.8,
     updatedAt: '05.06.2026 12:00',
   },
-  orders: [
-    { id: 'ORD-1007', type: 'Limit satış', amount: 850, price: 26.1, status: 'Beklemede' },
-    { id: 'ORD-1008', type: 'Spot satış', amount: 420, price: 25.4, status: 'Açık' },
-    { id: 'ORD-1009', type: 'Alış emri', amount: 300, price: 24.8, status: 'İzleniyor' },
-  ],
+  orders: [],
 });
 
 export const quotaPlans = loadRuntimeSection('quotaPlans', [
@@ -57,6 +53,7 @@ const graphObservations = [
     title: 'Aylık emisyon zirvesi',
     description: `${monthlyPeak.monthName} ${monthlyPeak.year}, grafikte yılın en yüksek toplam emisyon değerine sahip ayıdır.`,
     impactTco2e: monthlyPeak.actual,
+    unit: 'tCO2e',
     savingTry: 0,
     effort: '',
     status: 'open',
@@ -67,6 +64,7 @@ const graphObservations = [
     title: 'Son ay doğalgaz emisyonu',
     description: `${latestMonth.monthName} ${latestMonth.year} doğalgaz kaynaklı emisyon değeri grafikte gösterilmektedir.`,
     impactTco2e: latestMonth.naturalGasEmission,
+    unit: 'tCO2e',
     savingTry: 0,
     effort: '',
     status: 'open',
@@ -77,6 +75,7 @@ const graphObservations = [
     title: 'Son ay GES göstergesi',
     description: `${latestMonth.monthName} ${latestMonth.year} GES kaynaklı kaçınılan emisyon değeri grafikte gösterilmektedir.`,
     impactTco2e: latestMonth.avoidedEmission,
+    unit: 'tCO2',
     savingTry: 0,
     effort: '',
     status: 'open',

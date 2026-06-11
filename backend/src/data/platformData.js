@@ -1,4 +1,8 @@
 import { calculateDashboardFromEnergy, round } from '../domain/emissions.js';
+import {
+  buildFinancialScenarioPresets,
+  calculateFinancialScenario,
+} from '../domain/financialScenarios.js';
 import { getEmissionInventory, getLatestEnergyRecords } from '../services/energyData.js';
 import { loadRuntimeSection } from './runtimeStore.js';
 
@@ -13,6 +17,7 @@ export const company = {
 export const energyRecords = getLatestEnergyRecords();
 export const emissionInventory = getEmissionInventory();
 const unassignedFuelEmission = emissionInventory.fuel.totalEmission;
+const quotaReferencePriceEur = 25.4;
 export const dashboardTrend = emissionInventory.monthly.map((record) => ({
   month: record.month,
   monthName: record.monthName,
@@ -29,8 +34,8 @@ function buildAnnualDistribution(annualRecord) {
   return {
     year: annualRecord.year,
     total,
-    scope: 'Kapsam 1 + Kapsam 2 + dönem atanmamış yakıt',
-    note: 'Dönemi bilinmeyen yakıt emisyonları yıllık toplamda ayrı bir dilim olarak gösterilir.',
+    scope: 'Kapsam 1 + Kapsam 2; ayrıca dönem atanmamış yakıt',
+    note: 'Yakıt emisyonunun dönemi bilinmediği için ayrı gösterilir ve seçili yılın yıllık toplamına dahil edilmez.',
     items: [
       {
         name: 'Elektrik',
@@ -49,7 +54,7 @@ function buildAnnualDistribution(annualRecord) {
         unit: 'tCO2e',
       },
       {
-        name: 'Yakıt',
+        name: 'Yakıt (dönem atanmamış)',
         value: unassignedFuelEmission,
         percent: round((unassignedFuelEmission / total) * 100, 1),
         color: '#F5C76B',
@@ -66,6 +71,7 @@ function buildAnnualQuota({
   quotaLimit = null,
   baselineYear = null,
   baselineEmission = null,
+  referencePriceEur = quotaReferencePriceEur,
 }) {
   const hasQuota = Number.isFinite(quotaLimit);
   const hasActual = Number.isFinite(actualEmission);
@@ -82,6 +88,13 @@ function buildAnnualQuota({
     usedPercent: hasQuota && hasActual ? round((actualEmission / quotaLimit) * 100, 1) : null,
     remaining: difference === null ? null : Math.max(0, difference),
     overage: quotaExceeded ? Math.abs(difference) : 0,
+    referencePriceEur,
+    referenceValueEur: difference === null
+      ? null
+      : round(Math.abs(difference) * referencePriceEur, 2),
+    financialEffectType: difference === null
+      ? 'unavailable'
+      : quotaExceeded ? 'overage' : 'remaining',
     quotaExceeded,
     status: !hasQuota
       ? 'Kota tanımlı değil'
@@ -127,7 +140,7 @@ const calculated = calculateDashboardFromEnergy(energyRecords, {
   etsEligible: false,
   etsStatus: 'Üniversitelere özel resmî ETS tahsisi belgelenmedi; kurumsal kotalar yalnızca EcoByte içi azaltım izleme için kullanılır.',
   etsScreeningThresholdTco2e: 50000,
-  marketPrice: 25.4,
+  marketPrice: quotaReferencePriceEur,
   fuelEmission: unassignedFuelEmission,
   solarPositiveImpact: emissionInventory.summary.latestYear.avoidedEmission,
   solarFacilities: emissionInventory.solar.facilities,
@@ -143,18 +156,34 @@ calculated.distribution = {
 };
 const largestDistributionItem = [...calculated.distribution.items]
   .sort((left, right) => right.value - left.value)[0];
+const financialScenarioContext = {
+  year: latestAnnual.year,
+  electricityEmission: latestAnnual.scope2ElectricityEmission,
+  naturalGasEmission: latestAnnual.scope1NaturalGasEmission,
+  actualEmission: latestAnnual.grossEnergyEmission,
+  quotaLimit: quotaLimit2025,
+  currentQuotaRemaining: annualQuotas.at(-1).remaining,
+  currentQuotaOverage: annualQuotas.at(-1).overage,
+  referenceCarbonPriceEur: quotaReferencePriceEur,
+};
+const financialScenarioTrends = {
+  conservative: [42, 44, 46, 48, 50, 52, 54, 56],
+  balanced: [40, 45, 50, 55, 60, 65, 70, 75],
+  ambitious: [38, 46, 55, 64, 72, 80, 88, 96],
+};
 
 export const dashboard = {
   company,
   ...calculated,
-  scenarios: [
-    { type: 'base', label: 'Temel', value: calculated.summary.estimatedTradingProfit, trend: [45, 52, 48, 55, 60, 58, 62, 65] },
-    { type: 'pessimistic', label: 'Kötümser', value: Math.round(calculated.summary.estimatedTradingProfit * 0.78), trend: [60, 58, 55, 52, 50, 48, 45, 42] },
-    { type: 'optimistic', label: 'İyimser', value: Math.round(calculated.summary.estimatedTradingProfit * 1.26), trend: [40, 45, 50, 55, 60, 68, 72, 78] },
-  ],
+  scenarios: buildFinancialScenarioPresets(quotaReferencePriceEur).map((preset) => ({
+    type: preset.id,
+    label: preset.label,
+    value: calculateFinancialScenario(financialScenarioContext, preset.assumptions).npvEur,
+    trend: financialScenarioTrends[preset.id],
+  })),
   aiInsights: [
     { type: 'suggestion', title: 'Aylık emisyon trendi', description: `${latestTrend.monthName} ${latestTrend.year} toplam emisyon değeri grafikte gösteriliyor.`, impact: `${latestTrend.actual} tCO2e` },
-    { type: 'risk', title: 'Yıllık emisyon dağılımı', description: 'Grafik, seçilen yıldaki elektrik, doğalgaz ve yakıt emisyonlarının toplam içindeki payını gösteriyor.', impact: `En yüksek pay: ${largestDistributionItem.name} · %${largestDistributionItem.percent}` },
+    { type: 'risk', title: 'Emisyon dağılımı', description: 'Grafik, seçilen yılın elektrik ve doğalgaz emisyonlarını dönem atanmamış yakıtla birlikte gösteriyor; yakıt seçili yılın toplamına dahil değildir.', impact: `En yüksek pay: ${largestDistributionItem.name} · %${largestDistributionItem.percent}` },
     { type: 'opportunity', title: 'GES üretimi', description: `${latestTrend.monthName} ${latestTrend.year} GES üretimi grafikte gösteriliyor.`, impact: `${latestTrend.solarProductionKwh} kWh` },
   ],
 };

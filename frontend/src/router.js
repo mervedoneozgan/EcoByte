@@ -97,10 +97,10 @@ function renderDataError(error) {
   return `
     <div class="page">
       <section class="card api-error-card">
-        <p class="card__label">Gerçek veri bağlantısı</p>
+        <p class="card__label">Veri servisi bağlantısı</p>
         <h2 class="page-title page-title--left">Veriler yüklenemedi</h2>
         <p class="page-header__subtitle">${escapeHtml(error.message)}</p>
-        <p class="card__meta">Yerel örnek veri gösterilmedi. Backend bağlantısı düzeldiğinde gerçek veriler yeniden yüklenebilir.</p>
+        <p class="card__meta">Yerel örnek veri gösterilmedi. Veri servisi bağlantısı düzeldiğinde gerçek veriler yeniden yüklenebilir.</p>
         <button type="button" class="btn btn--primary" id="btn-retry-api">Yeniden Dene</button>
       </section>
     </div>`;

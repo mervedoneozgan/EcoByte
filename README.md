@@ -52,7 +52,13 @@ Platformdaki kurumsal kota limiti `5.000 tCO2e` olarak sabitlenmiştir. Bu kurum
 
 Dönemi doğrulanmamış yakıt emisyonları kota kullanımına dahil edilmez. GES kaynaklı kaçınılan emisyon pozitif etki olarak ayrı izlenir ve brüt emisyonlardan düşülmez. Resmî ETS tahsisi belgelenene kadar satılabilir kota ve tahmini ticaret geliri `0` olarak hesaplanır.
 
-Dashboard dağılımı yıllık çalışır: 2024 ve 2025 butonları ilgili yılın elektrik, doğalgaz ve dönem atanmamış yakıt emisyonlarını birlikte gösterir. Dönemi bilinmeyen yakıt ayrı bir dilim olarak gösterilir. Kota karşılaştırması her iki yıl için de `5.000 tCO2e` limiti üzerinden yapılır.
+Dashboard dağılım görünümü, seçilen yılın elektrik ve doğalgaz emisyonlarını dönem atanmamış yakıt emisyonlarıyla birlikte gösterir. Dönemi bilinmeyen yakıt ayrı bir dilimdir; seçilen yılın yıllık toplamına ve kota kullanımına dahil edilmez. Kota karşılaştırması her iki yıl için de `5.000 tCO2e` limiti üzerinden yapılır.
+
+Kota sayfasındaki finansal etki, seçilen yılın kota farkını referans karbon fiyatıyla çarpar. Kota altında kalan miktar için referans değer, aşım durumunda tahmini aşım karşılığı gösterilir. Bu tutarlar resmî ETS tahsisi, satılabilir hak, kesinleşmiş gelir veya ceza değildir.
+
+Emisyon Ticareti sayfasında kota altında kalan miktar **satılabilir kota adayı** olarak görünür. Resmî satılabilir ETS kotası ve emir verilebilir kapasite, yalnızca belgelenmiş ETS tahsisi varsa sıfırdan farklı hesaplanır.
+
+Finansal Senaryolar sayfasında elektrik ve doğalgaz azaltım oranları, yatırım, yıllık operasyonel tasarruf, analiz süresi, iskonto oranı ve karbon referans fiyatı değiştirilebilir. Platform; emisyon azaltımı, senaryo sonrası kota bakiyesi, ek kota hareket alanı, geri ödeme süresi, ROI ve net bugünkü değeri anlık hesaplar. Hesap sunucuda doğrulanabilir, JSON olarak indirilebilir ve sonuçlarıyla birlikte kalıcı kaydedilebilir.
 
 Kota planları, satış emirleri, danışmanlık talepleri, bildirim durumları, ayarlar ve rapor arşivi backend yeniden başlatıldığında kaybolmaz. Rapor metrikleri her açılışta güncel gerçek envanterden yeniden hesaplanır. Farklı bir çalışma verisi konumu için `OPERATIONAL_STORE_PATH` tanımlanabilir.
 

@@ -13,7 +13,7 @@ function renderObservationRows(items) {
           <strong>${item.title}</strong>
           <p class="page-header__subtitle">${item.description}</p>
         </td>
-        <td>${formatNumber(item.impactTco2e)} tCO2e</td>
+        <td>${formatNumber(item.impactTco2e)} ${item.unit ?? 'tCO2e'}</td>
       </tr>`
     )
     .join('');

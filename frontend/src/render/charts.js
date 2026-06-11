@@ -59,21 +59,21 @@ export function renderDistributionChart(distribution) {
     <article class="card card--chart">
       <div class="card__heading-row">
         <div>
-          <h3 class="card__heading">Toplam Emisyon Dağılımı</h3>
-          <p class="card__meta" id="distribution-chart-meta">${selectedYear} yıllık brüt emisyon · Kapsam 1 + 2</p>
+          <h3 class="card__heading">Emisyon Dağılım Görünümü</h3>
+          <p class="card__meta" id="distribution-chart-meta">${selectedYear} enerji emisyonu + dönem atanmamış yakıt</p>
         </div>
         <div class="segmented chart-filters" aria-label="Dağılım yılı seçimi">${yearButtons}</div>
       </div>
       <div class="chart-box chart-box--donut">
         <canvas id="chart-distribution"></canvas>
         <div class="donut-center">
-          <span class="donut-center__label" id="distribution-total-label">${selectedYear} toplam</span>
+          <span class="donut-center__label" id="distribution-total-label">Görünüm toplamı</span>
           <span class="donut-center__value" id="distribution-total">${formatNumber(distribution.total)}</span>
           <span class="donut-center__unit">tCO2e</span>
         </div>
       </div>
       <div class="legend-grid" id="distribution-legend">${renderDistributionLegend(distribution)}</div>
-      <p class="trade-card-note" id="distribution-chart-note">${distribution.note ?? 'Yıllık dağılım elektrik, doğalgaz ve dönem atanmamış yakıt emisyonlarını gösterir.'}</p>
+      <p class="trade-card-note" id="distribution-chart-note">${distribution.note ?? 'Seçili yılın elektrik ve doğalgaz emisyonları, dönem atanmamış yakıtla birlikte gösterilir.'}</p>
     </article>`;
 }
 
@@ -151,11 +151,11 @@ export function renderQuotaGauge(summary) {
         <div class="gauge-footer__stats">
           <div>
             <p class="gauge-footer__label">Yıllık emisyon</p>
-            <p class="gauge-footer__value" id="quota-gauge-actual">${selectedQuota.hasActual ? `${formatNumber(selectedQuota.actualEmission)} t` : 'Ölçüm bekleniyor'}</p>
+            <p class="gauge-footer__value" id="quota-gauge-actual">${selectedQuota.hasActual ? `${formatNumber(selectedQuota.actualEmission)} tCO2e` : 'Ölçüm bekleniyor'}</p>
           </div>
           <div>
             <p class="gauge-footer__label">Kota limiti</p>
-            <p class="gauge-footer__value gauge-footer__value--accent" id="quota-gauge-limit">${selectedQuota.hasQuota ? `${formatNumber(selectedQuota.quotaLimit)} t` : 'Tanımlı değil'}</p>
+            <p class="gauge-footer__value gauge-footer__value--accent" id="quota-gauge-limit">${selectedQuota.hasQuota ? `${formatNumber(selectedQuota.quotaLimit)} tCO2e` : 'Tanımlı değil'}</p>
           </div>
         </div>
       </div>

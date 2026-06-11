@@ -5,6 +5,9 @@ const SCENARIO_COLORS = {
   base: BRAND.lightGreen,
   pessimistic: BRAND.cyan,
   optimistic: BRAND.primaryBlue,
+  conservative: BRAND.cyan,
+  balanced: BRAND.lightGreen,
+  ambitious: BRAND.primaryBlue,
 };
 
 export function getScenarioColor(type) {
@@ -31,5 +34,7 @@ export function renderFinancialScenarios(scenarios) {
     <article class="card">
       <h3 class="card__heading">Finansal Senaryolar</h3>
       <div class="scenario-list">${rows}</div>
+      <p class="trade-card-note">Değerler, hazır senaryoların net bugünkü değerini gösterir.</p>
+      <button type="button" class="btn btn--primary btn--block" data-open-scenarios>Senaryoları Hesapla</button>
     </article>`;
 }

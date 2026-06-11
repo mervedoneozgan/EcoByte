@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { dashboard } from '../data/platformData.js';
+import { annualQuotas, dashboard } from '../data/platformData.js';
 import { trading } from '../data/operationalData.js';
 import { requireRole } from '../auth/middleware.js';
 import { readNumber, readText, requireOneOf } from '../http/validation.js';
@@ -11,11 +11,21 @@ const SELL_ORDER_TYPES = ['Limit satış', 'Spot satış'];
 const ORDER_TYPES = [...SELL_ORDER_TYPES, 'Alış emri'];
 
 function tradingCapacity() {
-  const safeReserve = Math.round(dashboard.summary.quotaLimit * SAFE_RESERVE_RATE);
+  const selectedQuota = annualQuotas.find((item) => item.year === dashboard.summary.quotaYear)
+    ?? annualQuotas.at(-1);
+  const candidateSellableQuota = selectedQuota?.hasQuota && selectedQuota?.hasActual
+    && !selectedQuota.quotaExceeded
+    ? selectedQuota.remaining
+    : 0;
+  const safeReserve = Math.round(dashboard.summary.sellableSurplus * SAFE_RESERVE_RATE);
   const reservedByOpenOrders = trading.orders
     .filter((order) => SELL_ORDER_TYPES.includes(order.type) && ['Beklemede', 'Açık'].includes(order.status))
     .reduce((sum, order) => sum + Number(order.amount || 0), 0);
   return {
+    quotaYear: selectedQuota?.year ?? dashboard.summary.quotaYear,
+    candidateSellableQuota,
+    candidateReferenceValueEur: selectedQuota?.referenceValueEur ?? 0,
+    officialSellableQuota: dashboard.summary.sellableSurplus,
     safeReserve,
     reservedByOpenOrders,
     availableCapacity: Math.max(0, dashboard.summary.sellableSurplus - safeReserve - reservedByOpenOrders),

@@ -134,8 +134,8 @@ export function mountDashboardCharts(data) {
       distributionChart?.destroy();
       distributionChart = createDistributionChart(distributionCanvas, selected);
       document.getElementById('distribution-chart-meta').textContent =
-        `${selected.year} yıllık brüt emisyon · ${selected.scope}`;
-      document.getElementById('distribution-total-label').textContent = `${selected.year} toplam`;
+        `${selected.year} enerji emisyonu + dönem atanmamış yakıt`;
+      document.getElementById('distribution-total-label').textContent = 'Görünüm toplamı';
       document.getElementById('distribution-total').textContent = formatNumber(selected.total);
       document.getElementById('distribution-legend').innerHTML = renderDistributionLegend(selected);
       document.getElementById('distribution-chart-note').textContent = selected.note;
@@ -198,9 +198,9 @@ export function mountDashboardCharts(data) {
       document.getElementById('quota-gauge-percent').textContent =
         selected.usedPercent === null ? '-' : `${selected.usedPercent}%`;
       document.getElementById('quota-gauge-actual').textContent =
-        selected.hasActual ? `${formatNumber(selected.actualEmission)} t` : 'Ölçüm bekleniyor';
+        selected.hasActual ? `${formatNumber(selected.actualEmission)} tCO2e` : 'Ölçüm bekleniyor';
       document.getElementById('quota-gauge-limit').textContent =
-        selected.hasQuota ? `${formatNumber(selected.quotaLimit)} t` : 'Tanımlı değil';
+        selected.hasQuota ? `${formatNumber(selected.quotaLimit)} tCO2e` : 'Tanımlı değil';
       document.getElementById('quota-chart-note').textContent = selected.hasQuota
         ? selected.hasActual
           ? 'Kota ve gerçekleşen emisyon aynı yıl içinde karşılaştırılıyor.'
@@ -228,6 +228,9 @@ export function mountDashboardCharts(data) {
   });
   document.querySelectorAll('[data-open-trading]').forEach((button) => {
     button.addEventListener('click', () => navigateTo('trading'));
+  });
+  document.querySelectorAll('[data-open-scenarios]').forEach((button) => {
+    button.addEventListener('click', () => navigateTo('scenarios'));
   });
   document.querySelector('[data-open-notifications]')?.addEventListener('click', () => navigateTo('notifications'));
 }

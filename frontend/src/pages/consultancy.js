@@ -247,7 +247,7 @@ function openNewRequestModal({ expertId = '', title = '' } = {}) {
       pageData.summary.open += 1;
       document.getElementById('requests-tbody').innerHTML = renderRequestsTable(pageData.requests);
       closeModal();
-      showToast('Talep oluşturuldu. Uzman 24 saat içinde dönüş yapacak.', 'success');
+      showToast('Talep oluşturuldu ve uzmana iletildi.', 'success');
     } catch (error) {
       showToast(error.message, 'error');
     }

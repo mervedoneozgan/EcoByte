@@ -7,7 +7,7 @@ export function renderKPICards(summary) {
   return `
     <div class="kpi-grid">
       <article class="card">
-        <p class="card__label">${summary.reportingYear} Yıllık Brüt Emisyon</p>
+        <p class="card__label">${summary.reportingYear} Yıllık Enerji Emisyonu</p>
         <p class="card__value">${formatNumber(summary.totalEmission)} <span class="card__unit">tCO2e</span></p>
         <p class="card__trend">${icons.trending} ${trendPrefix}${summary.trendPercent}% son ay enerji değişimi</p>
         <p class="card__meta">Elektrik + doğalgaz · Kapsam 1 + 2</p>

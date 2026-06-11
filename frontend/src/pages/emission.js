@@ -41,11 +41,11 @@ function renderUnavailablePage() {
       <div class="page-toolbar">
         <div>
           <h2 class="page-title page-title--left">Emisyon Ölçümü</h2>
-          <p class="page-header__subtitle">Gerçek emisyon envanteri için backend bağlantısı gereklidir.</p>
+          <p class="page-header__subtitle">Gerçek emisyon envanteri için veri servisi bağlantısı gereklidir.</p>
         </div>
       </div>
       <section class="card">
-        <p class="page-header__subtitle">Backend çalıştırıldığında CSV verileri formülize edilerek burada gösterilecektir.</p>
+        <p class="page-header__subtitle">Veri servisi çalıştırıldığında CSV kayıtları hesaplanarak burada gösterilecektir.</p>
       </section>
     </div>`;
 }
@@ -70,7 +70,7 @@ export function renderEmissionPage(data) {
 
       <div class="summary-grid summary-grid--4">
         <div class="summary-card summary-card--accent">
-          <p class="summary-card__label">Kapsamlı brüt emisyon</p>
+          <p class="summary-card__label">Enerji + dönem atanmamış yakıt</p>
           <p class="summary-card__value">${formatNumber(pageData.summary.comprehensiveGrossEmission)} tCO2e</p>
         </div>
         <div class="summary-card">
@@ -142,7 +142,7 @@ export function renderEmissionPage(data) {
 
       <section class="card card--table">
         <h3 class="card__heading">Yakıt kaynaklı emisyonlar</h3>
-        <p class="page-header__subtitle">${pageData.fuel.reportingPeriod}; kapsamlı brüt dağılıma eklenir fakat dönem atanmamış olarak işaretlenir.</p>
+        <p class="page-header__subtitle">${pageData.fuel.reportingPeriod}; bu nedenle yıllık toplam ve kota hesabına dahil edilmez.</p>
         <div class="table-wrap">
           <table class="data-table">
             <thead><tr><th>Yakıt</th><th>Tüketim</th><th>Faktör</th><th>Emisyon</th></tr></thead>

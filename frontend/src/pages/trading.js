@@ -7,7 +7,7 @@ let pageData = null;
 
 function renderOrderRows(orders) {
   if (!orders.length) {
-    return '<tr><td colspan="6" class="table-empty">Henüz satış emri oluşturulmadı.</td></tr>';
+    return '<tr><td colspan="6" class="table-empty">Henüz emir oluşturulmadı.</td></tr>';
   }
 
   return orders
@@ -29,14 +29,14 @@ export function renderTradingPage(data) {
   pageData = JSON.parse(JSON.stringify(data));
   const { summary } = pageData;
   const orders = pageData.trading?.orders ?? [];
-  const reserve = pageData.trading?.safeReserve ?? Math.round(summary.quotaLimit * 0.08);
+  const candidateSellableQuota = pageData.trading?.candidateSellableQuota ?? 0;
+  const candidateReferenceValue = pageData.trading?.candidateReferenceValueEur
+    ?? candidateSellableQuota * summary.marketPrice;
+  const reserve = pageData.trading?.safeReserve ?? Math.round(summary.sellableSurplus * 0.08);
   const tradable = pageData.trading?.availableCapacity ?? Math.max(0, summary.sellableSurplus - reserve);
   const defaultAmount = Math.min(1000, Math.round(tradable));
   const defaultPrice = summary.marketPrice;
   const canCreateOrder = defaultAmount > 0 && defaultPrice > 0;
-  const conservative = tradable * (summary.marketPrice * 0.92);
-  const optimistic = tradable * (summary.marketPrice * 1.12);
-
   return `
     <div class="page" id="page-trading" data-tradable="${tradable}" data-market-price="${summary.marketPrice}">
       <div class="page-toolbar">
@@ -50,7 +50,7 @@ export function renderTradingPage(data) {
         <div class="trading-guide__intro">
           <span class="trading-guide__eyebrow">Kısaca ne işe yarar?</span>
           <h3 class="card__heading" id="trading-guide-title">Emisyon kotasının finansal değerini yönetir</h3>
-          <p>EcoByte, kurumsal kota ile resmî satılabilir ETS tahsisini ayrı hesaplar. Kota altında kalmak tek başına satılabilir hak oluşturmaz; satış kapasitesi yalnızca belgelenmiş tahsisten doğar.</p>
+          <p>EcoByte, kota altında kalan miktarı satılabilir kota adayı olarak gösterir. Bu miktar ancak resmî ETS tahsisiyle doğrulanırsa satış emrine konu olabilir.</p>
           <p class="trading-guide__note"><strong>Durum:</strong> ${escapeHtml(summary.etsStatus)} Bu sürümde emirler dış bir borsaya otomatik iletilmez.</p>
         </div>
         <ol class="trading-steps" aria-label="Emisyon ticareti adımları">
@@ -61,9 +61,9 @@ export function renderTradingPage(data) {
       </section>
 
       <div class="summary-grid summary-grid--4">
-        <div class="summary-card summary-card--accent"><p class="summary-card__label">Satılabilir kota</p><p class="summary-card__value">${formatNumber(summary.sellableSurplus)} <span class="summary-card__unit">tCO2e</span></p></div>
-        <div class="summary-card"><p class="summary-card__label">Güvenli rezerv</p><p class="summary-card__value">${formatNumber(reserve)} <span class="summary-card__unit">tCO2e</span></p></div>
-        <div class="summary-card"><p class="summary-card__label">Satışa uygun kapasite</p><p class="summary-card__value"><span id="trading-available-capacity">${formatNumber(tradable)}</span> <span class="summary-card__unit">tCO2e</span></p></div>
+        <div class="summary-card summary-card--accent"><p class="summary-card__label">${pageData.trading?.quotaYear ?? summary.quotaYear} satılabilir kota adayı</p><p class="summary-card__value">${formatNumber(candidateSellableQuota)} <span class="summary-card__unit">tCO2e</span></p></div>
+        <div class="summary-card"><p class="summary-card__label">Resmî satılabilir ETS kotası</p><p class="summary-card__value">${formatNumber(summary.sellableSurplus)} <span class="summary-card__unit">tCO2e</span></p></div>
+        <div class="summary-card"><p class="summary-card__label">Emir verilebilir kapasite</p><p class="summary-card__value"><span id="trading-available-capacity">${formatNumber(tradable)}</span> <span class="summary-card__unit">tCO2e</span></p></div>
         <div class="summary-card"><p class="summary-card__label">Referans piyasa fiyatı</p><p class="summary-card__value">${summary.marketPrice.toFixed(2)} <span class="summary-card__unit">€/tCO2e</span></p></div>
       </div>
 
@@ -89,14 +89,14 @@ export function renderTradingPage(data) {
         </section>
 
         <section class="card">
-          <h3 class="card__heading">Kapasitenin tahmini piyasa değeri</h3>
+          <h3 class="card__heading">Kota bakiyesinin referans değeri</h3>
           <dl class="data-list">
-            <div class="data-list__row"><dt>Temkinli senaryo (-%8)</dt><dd>${formatEuro(conservative)}</dd></div>
-            <div class="data-list__row"><dt>Referans piyasa fiyatı</dt><dd class="text-accent">${formatEuro(tradable * summary.marketPrice)}</dd></div>
-            <div class="data-list__row"><dt>İyimser senaryo (+%12)</dt><dd>${formatEuro(optimistic)}</dd></div>
+            <div class="data-list__row"><dt>Satılabilir kota adayı</dt><dd>${formatNumber(candidateSellableQuota)} tCO2e</dd></div>
+            <div class="data-list__row"><dt>Referans değer</dt><dd class="text-accent">${formatEuro(candidateReferenceValue)}</dd></div>
+            <div class="data-list__row"><dt>Resmî satış kapasitesi</dt><dd>${formatNumber(tradable)} tCO2e</dd></div>
             <div class="data-list__row"><dt>Piyasa güncellemesi</dt><dd>${pageData.trading?.market?.updatedAt ?? '-'}</dd></div>
           </dl>
-          <p class="trade-card-note">Bu değerler satışa uygun kapasitenin tamamı için tahmini brüt geliri gösterir; gerçekleşen işlem fiyatı farklı olabilir.</p>
+          <p class="trade-card-note">Referans değer, kurumsal kota bakiyesine göre hesaplanır. Resmî ETS tahsisi doğrulanmadığı için henüz satış geliri değildir.</p>
         </section>
       </div>
 

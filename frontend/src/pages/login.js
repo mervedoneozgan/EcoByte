@@ -16,7 +16,7 @@ export function renderLoginPage(message = '') {
           </p>
           <div class="login-feature-grid">
             <article><strong>24 aylık</strong><span>enerji görünümü</span></article>
-            <article><strong>Gerçek zamanlı</strong><span>karbon hesaplama</span></article>
+            <article><strong>Kaynak veriye dayalı</strong><span>karbon hesaplama</span></article>
             <article><strong>Uçtan uca</strong><span>aksiyon takibi</span></article>
           </div>
         </div>

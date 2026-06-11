@@ -175,7 +175,7 @@ export function renderDataCatalogPage(data) {
       <div class="summary-grid summary-grid--4">
         <div class="summary-card summary-card--accent"><p class="summary-card__label">Kaynak dosya</p><p class="summary-card__value">${pageData.metadata.sourceFileCount}</p></div>
         <div class="summary-card"><p class="summary-card__label">Ham kayıt</p><p class="summary-card__value">${pageData.metadata.rawRecordCount}</p></div>
-        <div class="summary-card"><p class="summary-card__label">Kapsamlı brüt emisyon</p><p class="summary-card__value">${formatNumber(totals.comprehensiveGrossEmission)} tCO2e</p></div>
+        <div class="summary-card"><p class="summary-card__label">Enerji + dönem atanmamış yakıt</p><p class="summary-card__value">${formatNumber(totals.comprehensiveGrossEmission)} tCO2e</p></div>
         <div class="summary-card summary-card--positive"><p class="summary-card__label">GES pozitif etkisi</p><p class="summary-card__value">+${formatNumber(totals.positiveSolarImpact)} tCO2</p></div>
       </div>
 
@@ -200,7 +200,7 @@ export function renderDataCatalogPage(data) {
       </section>
 
       <section class="card card--table">
-        <h3 class="card__heading">Emisyon faktörleri ve resmi kaynaklar</h3>
+        <h3 class="card__heading">Emisyon faktörleri ve resmî kaynaklar</h3>
         <div class="table-wrap"><table class="data-table">
           <thead><tr><th>Faktör</th><th>Değer</th><th>Sınıf</th><th>Kaynak / veri yılı</th><th>Yayım / güncelleme</th><th>2026 güncellik durumu</th><th>Bağlantı</th></tr></thead>
           <tbody>${renderFactorRows(pageData.factors)}</tbody>
@@ -234,7 +234,7 @@ export function renderDataCatalogPage(data) {
       <section class="card">
         <div class="card__heading-row">
           <h3 class="card__heading">Tüm ham veriler</h3>
-          <span class="page-header__subtitle">91 kaydın tamamı</span>
+          <span class="page-header__subtitle">${pageData.metadata.rawRecordCount} kaydın tamamı</span>
         </div>
         <div class="page-tabs page-tabs--wrap data-catalog-tabs">${renderDatasetButtons(pageData.datasets)}</div>
         <div id="dataset-content">${renderDataset(pageData.datasets[0])}</div>

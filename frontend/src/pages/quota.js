@@ -36,10 +36,44 @@ function renderAnnualQuotaRows(annualQuotas) {
     .join('');
 }
 
+function getFinancialEffect(quota, fallbackPrice) {
+  const referencePrice = Number(quota.referencePriceEur ?? fallbackPrice ?? 0);
+  if (!quota.hasQuota || !quota.hasActual) {
+    return {
+      balance: 'Yıllık karşılaştırma henüz yapılamaz',
+      label: 'Referans değer',
+      value: 'Hesaplanamadı',
+      valueClass: '',
+      note: 'Finansal etki için aynı yıla ait kota limiti ve gerçekleşen emisyon birlikte bulunmalıdır.',
+    };
+  }
+
+  const amount = quota.quotaExceeded ? quota.overage : quota.remaining;
+  const referenceValue = quota.referenceValueEur ?? amount * referencePrice;
+  if (quota.quotaExceeded) {
+    return {
+      balance: `${formatNumber(amount)} tCO2e aşım`,
+      label: 'Tahmini aşım karşılığı',
+      value: formatEuro(referenceValue),
+      valueClass: 'text-danger',
+      note: `Aşım miktarı ${referencePrice.toFixed(2)} €/tCO2e referans fiyatla çarpılmıştır. Bu tutar resmî ceza veya kesinleşmiş borç değildir.`,
+    };
+  }
+
+  return {
+    balance: `${formatNumber(amount)} tCO2e kota altında`,
+    label: 'Kota altı referans değeri',
+    value: formatEuro(referenceValue),
+    valueClass: 'text-accent',
+    note: `Kalan kota ${referencePrice.toFixed(2)} €/tCO2e referans fiyatla çarpılmıştır. Bu değer resmî ETS tahsisi, satılabilir hak veya gerçekleşmiş gelir değildir.`,
+  };
+}
+
 export function renderQuotaPage(data) {
   pageData = JSON.parse(JSON.stringify(data));
   const { summary, annualQuotas = [], plans = [], methodology = {} } = pageData;
   const selectedQuota = annualQuotas.find((item) => item.year === summary.quotaYear) ?? annualQuotas.at(-1);
+  const financialEffect = getFinancialEffect(selectedQuota, summary.marketPrice);
   const sourceLinks = (methodology.sources ?? [])
     .map((source) => `<a class="source-link" href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(source.label)}</a>`)
     .join(' · ');
@@ -95,13 +129,13 @@ export function renderQuotaPage(data) {
         </section>
 
         <section class="card">
-          <h3 class="card__heading">Finansal etki</h3>
+          <h3 class="card__heading">Kotaya göre finansal etki</h3>
           <dl class="data-list">
-            <div class="data-list__row"><dt>Satılabilir kota</dt><dd>${formatNumber(summary.sellableSurplus)} tCO2e</dd></div>
-            <div class="data-list__row"><dt>Piyasa fiyatı</dt><dd>${summary.marketPrice.toFixed(2)} €/tCO2e</dd></div>
-            <div class="data-list__row data-list__row--total"><dt>Tahmini gelir</dt><dd class="text-accent">${formatEuro(summary.estimatedTradingProfit)}</dd></div>
+            <div class="data-list__row"><dt>Kota farkı</dt><dd id="quota-financial-balance">${financialEffect.balance}</dd></div>
+            <div class="data-list__row"><dt>Referans karbon fiyatı</dt><dd id="quota-financial-price">${Number(selectedQuota.referencePriceEur ?? summary.marketPrice).toFixed(2)} €/tCO2e</dd></div>
+            <div class="data-list__row data-list__row--total"><dt id="quota-financial-value-label">${financialEffect.label}</dt><dd id="quota-financial-value" class="${financialEffect.valueClass}">${financialEffect.value}</dd></div>
           </dl>
-          <p class="trade-card-note">Satılabilir kota şu an 0'dır; kurum için belgelenmiş resmî ETS tahsisi bulunmamaktadır.</p>
+          <p class="trade-card-note" id="quota-financial-note">${financialEffect.note}</p>
         </section>
       </div>
 
@@ -167,6 +201,15 @@ export function initQuotaPage() {
         selected.hasQuota && selected.hasActual
           ? `${formatNumber(selected.quotaExceeded ? selected.overage : selected.remaining)} tCO2e ${selected.quotaExceeded ? 'aşım' : 'kalan'}`
           : 'Yıllık karşılaştırma henüz yapılamaz';
+      const financialEffect = getFinancialEffect(selected, pageData.summary.marketPrice);
+      document.getElementById('quota-financial-balance').textContent = financialEffect.balance;
+      document.getElementById('quota-financial-price').textContent =
+        `${Number(selected.referencePriceEur ?? pageData.summary.marketPrice).toFixed(2)} €/tCO2e`;
+      document.getElementById('quota-financial-value-label').textContent = financialEffect.label;
+      const financialValue = document.getElementById('quota-financial-value');
+      financialValue.textContent = financialEffect.value;
+      financialValue.className = financialEffect.valueClass;
+      document.getElementById('quota-financial-note').textContent = financialEffect.note;
     });
   });
 

@@ -125,6 +125,24 @@ test('rejects malformed JSON and invalid write payloads', async () => {
     body: JSON.stringify({ currentPassword: 'EcoByte2026!', newPassword: '1234' }),
   });
   assert.equal(weakPassword.status, 400);
+
+  const invalidScenario = await fetch(`${baseUrl}/scenarios/calculate`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      assumptions: {
+        electricityReductionPercent: 101,
+        naturalGasReductionPercent: 9,
+        investmentEur: 68000,
+        annualOperationalSavingsEur: 30000,
+        analysisYears: 5,
+        discountRatePercent: 10,
+        carbonPriceEur: 25.4,
+        includeCarbonValueInReturn: false,
+      },
+    }),
+  });
+  assert.equal(invalidScenario.status, 400);
 });
 
 test('returns the authenticated user and session', async () => {
@@ -179,7 +197,26 @@ test('limits AI analysis to measured graph observations', async () => {
   assert.ok(analysis.summary.latestPeriod);
   assert.ok(analysis.summary.peakPeriod);
   assert.equal(analysis.risks.length, 0);
+  assert.equal(analysis.recommendations.find((item) => /GES/i.test(item.title)).unit, 'tCO2');
   assert.doesNotMatch(renderedText, /varsay|kabul edilir|optimizasyonuna uygun|azaltılabilir/i);
+});
+
+test('calculates financial scenarios from quota and emission context', async () => {
+  const scenarioData = await request('/scenarios');
+  const dashboardScenarios = await request('/dashboard/scenarios');
+  assert.equal(scenarioData.context.year, 2025);
+  assert.equal(scenarioData.presets.length, 3);
+  assert.deepEqual(dashboardScenarios.map((item) => item.label), ['Temkinli', 'Dengeli', 'İddialı']);
+  assert.ok(dashboardScenarios.every((item) => Number.isFinite(item.value) && item.value !== 0));
+
+  const calculated = await request('/scenarios/calculate', {
+    method: 'POST',
+    body: JSON.stringify({ assumptions: scenarioData.presets.find((item) => item.id === 'balanced').assumptions }),
+  });
+  assert.equal(calculated.results.totalReduction, 229.434);
+  assert.equal(calculated.results.projectedQuotaRemaining, 3069.083);
+  assert.equal(calculated.results.roiPercent, 120.6);
+  assert.equal(calculated.results.simplePaybackYears, 2.27);
 });
 
 test('serves the complete 2024 and 2025 dashboard emission trend', async () => {
@@ -249,15 +286,34 @@ test('persists operational actions in the runtime store', async () => {
     method: 'POST',
     body: '{}',
   });
+  const scenario = await request('/scenarios/exports', {
+    method: 'POST',
+    body: JSON.stringify({
+      name: 'Test finansal senaryosu',
+      assumptions: {
+        electricityReductionPercent: 12,
+        naturalGasReductionPercent: 9,
+        investmentEur: 68000,
+        annualOperationalSavingsEur: 30000,
+        analysisYears: 5,
+        discountRatePercent: 10,
+        carbonPriceEur: 25.4,
+        includeCarbonValueInReturn: false,
+      },
+    }),
+  });
 
   assert.match(order.id, /^ORD-/);
   assert.equal(plan.status, 'planned');
   assert.equal(recommendation.status, 'planned');
+  assert.equal(scenario.results.totalReduction, 229.434);
+  assert.equal(scenario.results.roiPercent, 120.6);
   assert.equal(existsSync(operationalStorePath), true);
   const persisted = JSON.parse(readFileSync(operationalStorePath, 'utf8'));
   assert.equal(persisted.trading.orders[0].id, order.id);
   assert.equal(persisted.quotaPlans.some((item) => item.id === plan.id), true);
   assert.equal(persisted.aiAnalysis.recommendations.find((item) => item.id === 1).status, 'planned');
+  assert.equal(persisted.scenarioExports[0].results.projectedQuotaRemaining, 3069.083);
 
   const operationalDataUrl = pathToFileURL(join(process.cwd(), 'src/data/operationalData.js')).href;
   const restarted = JSON.parse(execFileSync(
@@ -413,7 +469,15 @@ test('does not create sellable capacity without an official ETS allocation', asy
   const summary = await request('/dashboard/summary');
   assert.equal(summary.etsEligible, false);
   assert.equal(summary.sellableSurplus, 0);
+  assert.equal(trading.candidateSellableQuota, 2839.649);
+  assert.equal(trading.candidateReferenceValueEur, 72127.08);
+  assert.equal(trading.officialSellableQuota, 0);
+  assert.equal(trading.safeReserve, 0);
   assert.equal(trading.availableCapacity, 0);
+  assert.equal(
+    trading.orders.some((order) => ['Limit satış', 'Spot satış'].includes(order.type)),
+    false
+  );
 
   const response = await fetch(`${baseUrl}/trading/orders`, {
     method: 'POST',
@@ -454,9 +518,13 @@ test('exposes the documented and exactly calculated 2024-2025 emission quotas', 
   assert.equal(quota.annualQuotas.find((item) => item.year === 2024).quotaLimit, 5000);
   assert.equal(quota.annualQuotas.find((item) => item.year === 2024).usedPercent, 27.9);
   assert.equal(quota.annualQuotas.find((item) => item.year === 2024).quotaExceeded, false);
+  assert.equal(quota.annualQuotas.find((item) => item.year === 2024).financialEffectType, 'remaining');
+  assert.equal(quota.annualQuotas.find((item) => item.year === 2024).referenceValueEur, 91516.12);
   assert.equal(quota.annualQuotas.find((item) => item.year === 2025).quotaLimit, 5000);
   assert.equal(quota.annualQuotas.find((item) => item.year === 2025).usedPercent, 43.2);
   assert.equal(quota.annualQuotas.find((item) => item.year === 2025).quotaExceeded, false);
+  assert.equal(quota.annualQuotas.find((item) => item.year === 2025).financialEffectType, 'remaining');
+  assert.equal(quota.annualQuotas.find((item) => item.year === 2025).referenceValueEur, 72127.08);
   assert.match(quota.methodology.title, /5\.000 tCO2e/);
   assert.ok(quota.methodology.sources.length >= 3);
 });

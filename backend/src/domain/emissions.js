@@ -11,7 +11,7 @@ export const EMISSION_FACTORS = {
     publishedAt: '26.12.2025',
     sourceUpdatedAt: '31.12.2025',
     checkedAt: '05.06.2026',
-    currencyStatus: '2026 itibarıyla yayımlanmış en güncel resmi ETKB tüketim noktası faktörü',
+    currencyStatus: '2026 itibarıyla yayımlanmış en güncel resmî ETKB tüketim noktası faktörü',
     sourceUrl:
       'https://enerji.gov.tr/Media/Dizin/EVCED/tr/%C3%87evreVe%C4%B0klim/%C4%B0klimDe%C4%9Fi%C5%9Fikli%C4%9Fi/EmisyonFaktorleri/2023_Turkiye_Elektrik_UretimiveElektrik_Tuketim_Noktasi_Emisyon_Faktorleri.pdf',
   },
@@ -25,7 +25,7 @@ export const EMISSION_FACTORS = {
     source: 'T.C. Enerji ve Tabii Kaynaklar Bakanlığı',
     sourceYear: 2023,
     checkedAt: '05.06.2026',
-    currencyStatus: '2026 itibarıyla erişilebilen en güncel resmi ETKB birleşik marj faktörü',
+    currencyStatus: '2026 itibarıyla erişilebilen en güncel resmî ETKB birleşik marj faktörü',
     sourceUrl:
       'https://enerji.gov.tr/Media/Dizin/EVCED/tr/%C3%87evreVe%C4%B0klim/%C4%B0klimDe%C4%9Fikli%C4%9Fi/TUESEmisyonFktr/Belgeler/Sebeke_EF_Bilgi_Formu_2023.pdf',
   },
@@ -40,7 +40,7 @@ export const EMISSION_FACTORS = {
     sourceYear: 2025,
     publishedAt: '10.06.2025',
     checkedAt: '05.06.2026',
-    currencyStatus: '2026 faktör seti henüz yayımlanmadığı için en güncel yayımlanmış resmi set',
+    currencyStatus: '2026 faktör seti henüz yayımlanmadığı için en güncel yayımlanmış resmî set',
     sourceUrl:
       'https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2025',
   },
@@ -55,7 +55,7 @@ export const EMISSION_FACTORS = {
     sourceYear: 2025,
     publishedAt: '10.06.2025',
     checkedAt: '05.06.2026',
-    currencyStatus: '2026 faktör seti henüz yayımlanmadığı için en güncel yayımlanmış resmi set',
+    currencyStatus: '2026 faktör seti henüz yayımlanmadığı için en güncel yayımlanmış resmî set',
     sourceUrl:
       'https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2025',
   },
@@ -70,7 +70,7 @@ export const EMISSION_FACTORS = {
     sourceYear: 2025,
     publishedAt: '10.06.2025',
     checkedAt: '05.06.2026',
-    currencyStatus: '2026 faktör seti henüz yayımlanmadığı için en güncel yayımlanmış resmi set',
+    currencyStatus: '2026 faktör seti henüz yayımlanmadığı için en güncel yayımlanmış resmî set',
     sourceUrl:
       'https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2025',
   },
@@ -85,7 +85,7 @@ export const EMISSION_FACTORS = {
     sourceYear: 2025,
     publishedAt: '10.06.2025',
     checkedAt: '05.06.2026',
-    currencyStatus: '2026 faktör seti henüz yayımlanmadığı için en güncel yayımlanmış resmi set',
+    currencyStatus: '2026 faktör seti henüz yayımlanmadığı için en güncel yayımlanmış resmî set',
     sourceUrl:
       'https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2025',
   },
@@ -122,7 +122,7 @@ export const EMISSION_FORMULAS = [
   {
     key: 'solarAvoidedEmission',
     label: 'GES kaynaklı kaçınılan emisyon',
-    expression: 'kaçınılan tCO2 = GES üretimi (kWh) x güneş birleşik marj faktörü / 1000',
+    expression: 'Kaçınılan tCO2 = GES üretimi (kWh) × güneş birleşik marj faktörü ÷ 1000',
     symbolicExpression: 'P_GES = A_GES × EF_birleşik_marj ÷ 1000',
     factorKey: 'solarAvoided',
     classification: 'Pozitif etki · Envanter dışı azaltım',
@@ -130,11 +130,11 @@ export const EMISSION_FORMULAS = [
   },
   {
     key: 'comprehensiveGrossEmission',
-    label: 'Kapsamlı brüt emisyon göstergesi',
-    expression: 'Kapsamlı brüt tCO2e = elektrik tCO2e + doğalgaz tCO2e + dönem atanmamış yakıt tCO2e',
+    label: 'Enerji emisyonu + dönem atanmamış yakıt',
+    expression: 'Brüt gösterge = elektrik tCO2e + doğalgaz tCO2e + dönem atanmamış yakıt tCO2e',
     symbolicExpression: 'E_brüt = E_elektrik + E_doğalgaz + E_yakıt',
-    classification: 'Brüt emisyon göstergesi',
-    note: 'Yakıt kaynağında dönem bulunmadığından bu gösterge veri-kalitesi uyarısıyla sunulur.',
+    classification: 'Dönemler arası brüt emisyon göstergesi',
+    note: 'Yakıt kaynağında dönem bulunmadığından bu değer seçili yılın yıllık emisyon toplamı değildir.',
   },
 ];
 

@@ -46,7 +46,7 @@ function reportPreview(report) {
       <div><dt>Rapor türü</dt><dd>${escapeHtml(report.type)}</dd></div>
       <div><dt>Dönem</dt><dd>${escapeHtml(report.period)}</dd></div>
       <div><dt>PDF motoru</dt><dd>${escapeHtml(report.engine)}</dd></div>
-      <div><dt>Toplam brüt emisyon</dt><dd>${formatNumber(report.metrics.grossEmission)} tCO2e</dd></div>
+      <div><dt>Enerji + dönem atanmamış yakıt</dt><dd>${formatNumber(report.metrics.grossEmission)} tCO2e</dd></div>
       <div><dt>Elektrik</dt><dd>${formatNumber(report.metrics.electricityEmission)} tCO2e</dd></div>
       <div><dt>Doğalgaz</dt><dd>${formatNumber(report.metrics.naturalGasEmission)} tCO2e</dd></div>
       <div><dt>Dönem atanmamış yakıt</dt><dd>${formatNumber(report.metrics.fuelEmissionUnassigned)} tCO2e</dd></div>
